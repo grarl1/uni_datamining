@@ -1,0 +1,7 @@
+# Backup files
+*~
+
+# NetBeans project
+nbproject/
+build.xml
+manifest.mf
