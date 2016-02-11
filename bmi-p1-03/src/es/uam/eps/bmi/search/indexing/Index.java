@@ -81,4 +81,11 @@ public interface Index {
      * @return a list of the postings of the given term.
      */
     public List<Posting> getTermPostings(String term);
+    
+    /**
+     * Returns a true if the index is loaded, false otherwise.
+     *
+     * @return true if index is loaded, false otherwise.
+     */
+    public boolean isLoaded();
 }

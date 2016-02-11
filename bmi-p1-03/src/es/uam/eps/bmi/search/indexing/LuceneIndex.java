@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -37,7 +39,9 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermFreqVector;
+import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -51,19 +55,8 @@ import org.apache.lucene.util.Version;
 public class LuceneIndex implements Index {
 
     /* Attributes */
-    private String indexPath; // Path where the index is indexed.
-    private final TextParser textParser; // Parser for document processing.
+    private String indexPath; // Path where the index is indexed
     private IndexReader reader = null;
-
-    /**
-     * Default constructor for LuceneIndex class.
-     *
-     * @param textParser A <code>TextParser</code> instance, used for documents
-     * processing.
-     */
-    public LuceneIndex(TextParser textParser) {
-        this.textParser = textParser;
-    }
 
     /**
      * Builds an index from a collection of text documents.
@@ -113,7 +106,7 @@ public class LuceneIndex implements Index {
         // Create writer.
         try (IndexWriter writer = new IndexWriter(outputDir, writerConfig)) {
             // Start indexing.
-            indexDocuments(writer, new File(inputCollectionPath));
+            indexDocuments(writer, new File(inputCollectionPath), textParser);
         } catch (IOException ex) {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
             System.err.println(ex.getMessage());
@@ -130,9 +123,10 @@ public class LuceneIndex implements Index {
      *
      * @param writer Writer to the path where the index will be stored.
      * @param file The file or directory whose documents will be index.
+     * @param textParser the parser used to process documents.
      * @throws IOException If the file or directory cannot be indexed.
      */
-    private void indexDocuments(IndexWriter writer, File file) throws IOException {
+    private void indexDocuments(IndexWriter writer, File file, TextParser textParser) throws IOException {
 
         // Make the index if the file/directory is readable.
         if (file.canRead()) {
@@ -145,7 +139,7 @@ public class LuceneIndex implements Index {
                 // Avoid IO errors.
                 if (files != null) {
                     for (String fileInside : files) {
-                        indexDocuments(writer, new File(file, fileInside));
+                        indexDocuments(writer, new File(file, fileInside), textParser);
                     }
                 }
             } // The file object represents a file (not a directory).
@@ -172,7 +166,7 @@ public class LuceneIndex implements Index {
                     byte[] byteContent = new byte[(int) file.length()];
                     fis.read(byteContent);
                     // Add the contents of the file to a field named "contents".
-                    doc.add(new Field("contents", new String(byteContent), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
+                    doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 
                     // New index, so we just add the document (no old document can be there)
                     System.out.println("Adding " + file);
@@ -273,9 +267,40 @@ public class LuceneIndex implements Index {
 
     }
 
+    /**
+     * Returns the list of Postings associated to a term.
+     *
+     * @param term term to get Postings.
+     * @return the list of Postings associated to a term.
+     */
     @Override
     public List<Posting> getTermPostings(String term) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<Posting> lp = new ArrayList<>();
+        try {
+            TermPositions tp = reader.termPositions(new Term("content", term));
+            while (tp.next()) {
+                List<Long> position_list = new ArrayList<>();
+                for (int i = 0; i < tp.freq(); i++) {
+
+                }
+                //Posting p = new Posting();
+                //lp.add(p);
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return lp;
+    }
+
+    /**
+     * Returns a true if the index is loaded, false otherwise.
+     *
+     * @return true if index is loaded, false otherwise.
+     */
+    @Override
+    public boolean isLoaded() {
+        return reader != null;
     }
 
     /**
@@ -300,7 +325,7 @@ public class LuceneIndex implements Index {
         }
 
         // Build the index
-        LuceneIndex luceneIndex = new LuceneIndex(new HTMLSimpleParser());
-        luceneIndex.build(args[0], args[1], null);
+        LuceneIndex luceneIndex = new LuceneIndex();
+        luceneIndex.build(args[0], args[1], new HTMLSimpleParser());
     }
 }

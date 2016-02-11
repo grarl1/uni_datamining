@@ -27,14 +27,27 @@ import java.util.List;
 public class Posting {
 
     /*Associated term*/
-    private String term;
+    private final String term;
 
     /*Associated document id*/
-    private String docID;
+    private final String docID;
 
     /*Position of the term within the document*/
-    private List<Long> termPositions;
+    private final List<Long> termPositions;
 
+    /**
+     * Default constructor for <code>TextDocument</code> class.
+     *
+     * @param term term associated to the posting.
+     * @param docID ID of the document.
+     * @param termPositions Array of term positions.
+     */
+    public Posting(String term, String docID, List<Long> termPositions) {
+        this.term = term;
+        this.docID = docID;
+        this.termPositions = termPositions;
+    }
+    
     /**
      * Returns the associated term.
      *
