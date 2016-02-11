@@ -28,8 +28,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -58,6 +56,15 @@ public class LuceneIndex implements Index {
     private String indexPath; // Path where the index is indexed
     private IndexReader reader = null;
 
+    /**
+     * Getter for IndexReader
+     *
+     * @return IndexReader.
+     */
+    public IndexReader getReader() {
+        return reader;
+    }
+    
     /**
      * Builds an index from a collection of text documents.
      *
@@ -281,7 +288,6 @@ public class LuceneIndex implements Index {
             while (tp.next()) {
                 List<Long> position_list = new ArrayList<>();
                 for (int i = 0; i < tp.freq(); i++) {
-
                 }
                 //Posting p = new Posting();
                 //lp.add(p);
