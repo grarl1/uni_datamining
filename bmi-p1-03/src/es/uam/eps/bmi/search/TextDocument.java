@@ -25,10 +25,21 @@ package es.uam.eps.bmi.search;
 public class TextDocument {
 
     /*Id of the document*/
-    private String id;
+    private final String id;
 
     /*Absolute path of the document*/
-    private String name;
+    private final String name;
+
+    /**
+     * Default constructor for <code>TextDocument</code> class.
+     *
+     * @param id Unique ID for the text document.
+     * @param name Text document absolute path.
+     */
+    public TextDocument(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
     public String getId() {
         return id;
@@ -50,7 +61,7 @@ public class TextDocument {
 
     /**
      * Indicates whether some other object is "equal to" this one by comparing
-     * their Ids.
+     * their ids.
      *
      * @param obj to compare to.
      * @return true if both objects have the same Id.

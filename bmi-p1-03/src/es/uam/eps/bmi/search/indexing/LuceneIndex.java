@@ -17,16 +17,27 @@
 package es.uam.eps.bmi.search.indexing;
 
 import es.uam.eps.bmi.search.TextDocument;
+import es.uam.eps.bmi.search.parsing.HTMLSimpleParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.FieldInfo.IndexOptions;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -38,6 +49,234 @@ import org.apache.lucene.util.Version;
  * @author Guillermo Ruiz Álvarez
  */
 public class LuceneIndex implements Index {
+
+    /* Attributes */
+    private String indexPath; // Path where the index is indexed.
+    private final TextParser textParser; // Parser for document processing.
+    private IndexReader reader = null;
+
+    /**
+     * Default constructor for LuceneIndex class.
+     *
+     * @param textParser A <code>TextParser</code> instance, used for documents
+     * processing.
+     */
+    public LuceneIndex(TextParser textParser) {
+        this.textParser = textParser;
+    }
+
+    /**
+     * Builds an index from a collection of text documents.
+     *
+     * @param inputCollectionPath Path to the directory containing the
+     * collection of documents to be indexed.
+     * @param outputIndexPath Path to the directory to store the indexes.
+     * @param textParser Parser for document processing.
+     */
+    @Override
+    public void build(String inputCollectionPath, String outputIndexPath, TextParser textParser) {
+
+        // Input control
+        File docsPath = new File(inputCollectionPath);
+        if (!docsPath.exists() || !docsPath.isDirectory()) {
+            System.err.printf("%s: not a directory.\n", docsPath.getAbsolutePath());
+            return;
+        } else if (!docsPath.canRead()) {
+            System.err.printf("Couldn't read in %s.\n", docsPath.getAbsolutePath());
+            return;
+        }
+
+        // Attributes
+        this.indexPath = outputIndexPath;
+
+        // Start timing.
+        Date start = new Date();
+        System.out.println("Indexing documents from '" + inputCollectionPath + "'...");
+
+        // Create directory.
+        Directory outputDir;
+        try {
+            outputDir = FSDirectory.open(new File(outputIndexPath));
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        }
+
+        // Create analyzer.
+        Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
+
+        // Create the writer configuration in order to create new documents.
+        IndexWriterConfig writerConfig = new IndexWriterConfig(Version.LUCENE_36, analyzer);
+        writerConfig.setOpenMode(OpenMode.CREATE);
+
+        // Create writer.
+        try (IndexWriter writer = new IndexWriter(outputDir, writerConfig)) {
+            // Start indexing.
+            indexDocuments(writer, new File(inputCollectionPath));
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        }
+
+        // Stop timing and print elapsed time.
+        Date end = new Date();
+        System.out.println(end.getTime() - start.getTime() + " total milliseconds");
+    }
+
+    /**
+     * Indexes the given file using the given writer.
+     *
+     * @param writer Writer to the path where the index will be stored.
+     * @param file The file or directory whose documents will be index.
+     * @throws IOException If the file or directory cannot be indexed.
+     */
+    private void indexDocuments(IndexWriter writer, File file) throws IOException {
+
+        // Make the index if the file/directory is readable.
+        if (file.canRead()) {
+
+            // If the file represents a directory, call this function recursively
+            // for each file within.
+            if (file.isDirectory()) {
+                // Files within the directory
+                String[] files = file.list();
+                // Avoid IO errors.
+                if (files != null) {
+                    for (String fileInside : files) {
+                        indexDocuments(writer, new File(file, fileInside));
+                    }
+                }
+            } // The file object represents a file (not a directory).
+            else {
+
+                try (FileInputStream fis = new FileInputStream(file)) {
+
+                    // Create a new empty document.
+                    Document doc = new Document();
+
+                    // Add the path of the file as a field named "docID".  Use a
+                    // field that is indexed (i.e. searchable), but don't tokenize 
+                    // the field into separate words and don't index term frequency
+                    // or positional information:
+                    Field idField = new Field("docID", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                    idField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                    doc.add(idField);
+                    // Do the same with the name
+                    Field nameField = new Field("name", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                    nameField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                    doc.add(nameField);
+
+                    // Read the whole content from file.
+                    byte[] byteContent = new byte[(int) file.length()];
+                    fis.read(byteContent);
+                    // Add the contents of the file to a field named "contents".
+                    doc.add(new Field("contents", new String(byteContent), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
+
+                    // New index, so we just add the document (no old document can be there)
+                    System.out.println("Adding " + file);
+                    writer.addDocument(doc);
+
+                } catch (FileNotFoundException ex) {
+                    System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                    System.err.println(ex.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Stores (partially or completely) a previously created index in memory.
+     *
+     * @param indexPath Path to the directory where the index is stored.
+     */
+    @Override
+    public void load(String indexPath) {
+        // Store index path.
+        this.indexPath = indexPath;
+
+        // Read the index
+        try {
+            reader = IndexReader.open(FSDirectory.open(new File(indexPath)));
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+
+    }
+
+    @Override
+    public String getPath() {
+        return indexPath;
+    }
+
+    @Override
+    public List<String> getDocIds() {
+        // If the index has not been loaded, return null.
+        if (reader == null) {
+            return null;
+        }
+
+        // Build the list.
+        List<String> docIds = new ArrayList<>();
+        for (int i = 0; i < reader.numDocs(); ++i) {
+            try {
+                docIds.add(reader.document(i).getFieldable("docID").stringValue());
+            } catch (IOException ex) {
+                System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+            }
+        }
+        return docIds;
+    }
+
+    /**
+     * Returns a document given its Id.
+     *
+     * @param docId Id of the document to retrieve.
+     * @return a <code>TextDocument</code> instance matching the given Id.
+     */
+    @Override
+    public TextDocument getDocument(String docId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * Returns the list of terms extracted from the indexed documents.
+     *
+     * @return the list of terms extracted from the indexed documents.
+     */
+    @Override
+    public List<String> getTerms() {
+        // If the index has not been loaded, return null.
+        if (reader == null) {
+            return null;
+        }
+
+        // Build the list without repeated elements.
+        HashSet<String> termsSet = new HashSet<>();
+        List<String> termsList = new ArrayList<>();
+
+        // Interte over the documents
+        for (int i = 0; i < reader.numDocs(); ++i) {
+            try {
+                TermFreqVector freqVector = reader.getTermFreqVector(i, "content");
+                termsSet.addAll(Arrays.asList(freqVector.getTerms()));
+            } catch (IOException ex) {
+                System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+            }
+        }
+        termsList.addAll(termsSet);
+        return termsList;
+
+    }
+
+    @Override
+    public List<Posting> getTermPostings(String term) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     /**
      * Main class for Lucene index.
@@ -60,84 +299,8 @@ public class LuceneIndex implements Index {
             return;
         }
 
-        // Input file control
-        File docsPath = new File(args[0]);
-        if (!docsPath.exists() || !docsPath.isDirectory()) {
-            System.err.printf("%s: not a directory.\n", docsPath.getAbsolutePath());
-        } else if (!docsPath.canRead()) {
-            System.err.printf("Couldn't read in %s\n", docsPath.getAbsolutePath());
-        }
-
         // Build the index
-        LuceneIndex luceneIndex = new LuceneIndex();
+        LuceneIndex luceneIndex = new LuceneIndex(new HTMLSimpleParser());
         luceneIndex.build(args[0], args[1], null);
-    }
-
-    /**
-     * Builds an index from a collection of text documents.
-     *
-     * @param inputCollectionPath Path to the directory containing the
-     * collection of documents to be indexed.
-     * @param outputIndexPath Path to the directory to store the indexes.
-     * @param textParser Parser for document processing.
-     */
-    @Override
-    public void build(String inputCollectionPath, String outputIndexPath, TextParser textParser) {
-        // Exception control.
-        try {
-            // Start timing.
-            Date start = new Date();
-            System.out.println("Indexing documents from '" + inputCollectionPath
-                    + "' to directory '" + outputIndexPath + "'...");
-
-            // Create directory and analyzer.
-            Directory outputDir = FSDirectory.open(new File(outputIndexPath));
-            Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_31);
-
-            // Create the writer in order to add new documents 
-            // to an existing index or create a new one.
-            IndexWriterConfig writerConfig = new IndexWriterConfig(Version.LUCENE_31, analyzer);
-            writerConfig.setOpenMode(OpenMode.CREATE_OR_APPEND);
-            IndexWriter writer = new IndexWriter(outputDir, writerConfig);
-
-            // Start indexing.
-            indexDocuments(writer, new File(inputCollectionPath));
-        } catch (IOException ex) {
-            System.err.printf("Error while performing an I/O operation: %s\n", ex.getMessage());
-        }
-    }
-
-    private void indexDocuments(IndexWriter writer, File file) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void load(String indexPath) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getPath() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<String> getDocIds() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public TextDocument getDocument(String docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<String> getTerms() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<Posting> getTermPostings(String term) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
