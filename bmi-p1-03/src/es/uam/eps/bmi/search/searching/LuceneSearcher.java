@@ -17,17 +17,97 @@
 package es.uam.eps.bmi.search.searching;
 
 import es.uam.eps.bmi.search.ScoredTextDocument;
+import es.uam.eps.bmi.search.TextDocument;
 import es.uam.eps.bmi.search.indexing.Index;
+import es.uam.eps.bmi.search.indexing.LuceneIndex;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
+import java.util.TreeSet;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.util.Version;
 
 /**
+ * This class represents a Lucene searcher built using the Lucene library.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez
  */
 public class LuceneSearcher implements Searcher {
 
+    /* Constant */
     private static final int TOP = 5;
+
+    /* Attributes */
+    private IndexSearcher indexSearcher;
+
+    /**
+     * Creates a searcher using the given index. This searcher only supports
+     * <code>LuceneIndex</code> instances as index.
+     *
+     * @param index Index used to create the searcher.
+     */
+    @Override
+    public void build(Index index) {
+        // Only implemented for LuceneIndex objects.
+        if (index instanceof LuceneIndex) {
+            System.out.println("Building searcher...");
+            LuceneIndex luceneIndex = (LuceneIndex) index;
+            indexSearcher = new IndexSearcher(luceneIndex.getReader());
+            System.out.println("Done.");
+        } else {
+            throw new UnsupportedOperationException("This searcher only suppport LuceneIndex instances.");
+        }
+    }
+
+    /**
+     * Returns a ranking of documents sorted by the score value or null if the
+     * search couldn't be done.
+     *
+     * @param query Query used to search.
+     * @return a ranking of documents sorted by the score value or null if the
+     * search couldn't be done.
+     */
+    @Override
+    public List<ScoredTextDocument> search(String query) {
+        try {
+            // Create analyzer
+            Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
+            // Create query parser
+            QueryParser parser = new QueryParser(Version.LUCENE_36, "content", analyzer);
+            Query q = parser.parse(query);
+
+            // Get results.
+            ScoreDoc[] resultArray = indexSearcher.search(q, TOP).scoreDocs;
+
+            // Build result list.
+            TreeSet sortedSet = new TreeSet();
+            for (ScoreDoc scoreDoc : resultArray) {
+                sortedSet.add(new ScoredTextDocument(indexSearcher.doc(scoreDoc.doc).getFieldable("docID").stringValue(), scoreDoc.score));
+            }
+
+            // Sort the list and return it.
+            ArrayList<ScoredTextDocument> resultList = new ArrayList(sortedSet);
+            Collections.reverse(resultList);
+            return resultList;
+        } catch (ParseException ex) {
+            System.err.println("Exception caught while parsing the query: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return null;
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return null;
+        }
+    }
 
     /**
      * Main class for Lucene searcher.
@@ -37,23 +117,44 @@ public class LuceneSearcher implements Searcher {
      */
     public static void main(String[] args) {
         // Input control
-        if (args.length != 2) {
-            System.err.printf("Usage: %s tindex_path\n"
+        if (args.length != 1) {
+            System.err.printf("Usage: %s index_path\n"
                     + "\tindex_path: Path to a directory containing a Lucene index.\n",
                     LuceneSearcher.class.getSimpleName());
             return;
         }
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
-    @Override
-    public void build(Index index) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        // Create a LuceneIndex instance.
+        LuceneIndex luceneIndex = new LuceneIndex();
+        luceneIndex.load(args[0]);
 
-    @Override
-    public List<ScoredTextDocument> search(String query) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        // Check if the index has been correctly loaded.
+        if (luceneIndex.isLoaded()) {
+            LuceneSearcher luceneSearcher = new LuceneSearcher();
+            luceneSearcher.build(luceneIndex);
 
+            // Ask for queries.
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Enter a query (press enter to finish): ");
+            String query = scanner.nextLine();
+            while (!query.equals("")) {
+                // Show results.
+                List<ScoredTextDocument> resultList = luceneSearcher.search(query);
+                // If there were no errors, show the results.
+                if (resultList != null) {
+                    if (resultList.isEmpty()) {
+                        System.out.println("No results.");
+                    } else {
+                        System.out.println("Showing top " + TOP + " documents:");
+                        resultList.forEach((ScoredTextDocument t) -> {
+                            TextDocument document = luceneIndex.getDocument(t.getDocID());
+                            if (document != null) {
+                                System.out.println(document.getName());
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    }
 }

@@ -24,13 +24,35 @@ package es.uam.eps.bmi.search;
  */
 public class ScoredTextDocument implements Comparable {
 
-    private String docID;
-    private double score;
+    /* Attributes */
+    private final String docID;
+    private final double score;
 
+    /**
+     * Default constructor for <code>ScoredTextDocument</code> class.
+     *
+     * @param docID Unique ID for the text document.
+     * @param score Score of the text document.
+     */
+    public ScoredTextDocument(String docID, double score) {
+        this.docID = docID;
+        this.score = score;
+    }
+
+    /**
+     * Returns the document id.
+     *
+     * @return the document id.
+     */
     public String getDocID() {
         return docID;
     }
 
+    /**
+     * Returns the score of the document.
+     *
+     * @return the score of the document.
+     */
     public double getScore() {
         return score;
     }
@@ -38,15 +60,34 @@ public class ScoredTextDocument implements Comparable {
     /**
      * Compares this object with the specified object for order. Returns a
      * negative integer, zero, or a positive integer as this object is less
-     * than, equal to, or greater than the specified object.
+     * than, equal to, or greater than the specified object. If the argument is
+     * not a <code>ScoredTextDocument</code> then returns -1. When -1 is
+     * received, the caller must discern whether the argument is a
+     * <code>ScoredTextDocument</code> and the distance with this object is 1,
+     * or the argument is not at <code>ScoredTextDocument</code> instance.
+     *
      *
      * @param t The object to be compared.
      * @return a negative integer, zero, or a positive integer as this object is
-     * less than, equal to, or greater than the specified object.
+     * less than, equal to, or greater than the specified object. If the
+     * argument is not a <code>ScoredTextDocument</code> then returns -1
      */
     @Override
     public int compareTo(Object t) {
-        return 0;
-    }
+        // Null argument.
+        if (t == null) {
+            return -1;
+        }
 
+        // Not an ScoredTextDocument
+        if (t.getClass() != this.getClass()) {
+            return -1;
+        }
+
+        // Return the values (if the difference is, for instance, 0.1, the
+        // function returns Math.ceil(0.1) = 1, because the documents are not 
+        // equal.
+        ScoredTextDocument scoredTextDocument = (ScoredTextDocument) t;
+        return (int) (this.score - scoredTextDocument.score);
+    }
 }

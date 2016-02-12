@@ -41,10 +41,20 @@ public class TextDocument {
         this.name = name;
     }
 
+    /**
+     * Returns the id of the text document.
+     *
+     * @return the id of the text document.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Returns the name of the text document.
+     *
+     * @return the name of the text document.
+     */
     public String getName() {
         return name;
     }
