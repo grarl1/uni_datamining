@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -55,6 +58,7 @@ public class LuceneIndex implements Index {
     /* Attributes */
     private String indexPath; // Path where the index is indexed
     private IndexReader reader = null;
+    private HashMap<String, Integer> namesMap = null;
 
     /**
      * Getter for IndexReader
@@ -116,13 +120,15 @@ public class LuceneIndex implements Index {
             indexDocuments(writer, new File(inputCollectionPath), textParser);
         } catch (IOException ex) {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
-            System.err.println(ex.getMessage());
+            System.err.println(ex.getMessage());            
             return;
         }
 
         // Stop timing and print elapsed time.
         Date end = new Date();
         System.out.println(end.getTime() - start.getTime() + " total milliseconds");
+        reader = null;
+        namesMap = null;
     }
 
     /**
@@ -152,32 +158,40 @@ public class LuceneIndex implements Index {
             } // The file object represents a file (not a directory).
             else {
 
-                try (FileInputStream fis = new FileInputStream(file)) {
+                try (FileInputStream fis = new FileInputStream(file);
+                        ZipInputStream zis = new ZipInputStream(fis)) {
 
-                    // Create a new empty document.
-                    Document doc = new Document();
+                    // If file is a ZIP, zis.getNextEntry() returns not null.
+                    if ( zis.getNextEntry() != null ) { 
+                        zis.close();
+                        indexZip(writer, file, textParser);
+                    }
+                    else { // if file is not a ZIP
+                        // Create a new empty document.
+                        Document doc = new Document();
 
-                    // Add the path of the file as a field named "docID".  Use a
-                    // field that is indexed (i.e. searchable), but don't tokenize 
-                    // the field into separate words and don't index term frequency
-                    // or positional information:
-                    Field idField = new Field("docID", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
-                    idField.setIndexOptions(IndexOptions.DOCS_ONLY);
-                    doc.add(idField);
-                    // Do the same with the name
-                    Field nameField = new Field("name", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
-                    nameField.setIndexOptions(IndexOptions.DOCS_ONLY);
-                    doc.add(nameField);
+                        // Add the path of the file as a field named "docID".  Use a
+                        // field that is indexed (i.e. searchable), but don't tokenize 
+                        // the field into separate words and don't index term frequency
+                        // or positional information:
+                        Field idField = new Field("docID", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                        idField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                        doc.add(idField);
+                        // Do the same with the name
+                        Field nameField = new Field("name", file.getPath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                        nameField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                        doc.add(nameField);
 
-                    // Read the whole content from file.
-                    byte[] byteContent = new byte[(int) file.length()];
-                    fis.read(byteContent);
-                    // Add the contents of the file to a field named "contents".
-                    doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
+                        // Read the whole content from file.
+                        byte[] byteContent = new byte[(int) file.length()];
+                        fis.read(byteContent);
+                        // Add the contents of the file to a field named "contents".
+                        doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 
-                    // New index, so we just add the document (no old document can be there)
-                    System.out.println("Adding " + file);
-                    writer.addDocument(doc);
+                        // New index, so we just add the document (no old document can be there)
+                        System.out.println("Adding " + file);
+                        writer.addDocument(doc);
+                    }
 
                 } catch (FileNotFoundException ex) {
                     System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
@@ -186,7 +200,59 @@ public class LuceneIndex implements Index {
             }
         }
     }
+    
+    /**
+     * Indexes every file inside zip file passed.
+     * Behavior undefined for zip files containing folders.
+     *
+     * @param writer Writer to the path where the index will be stored.
+     * @param zipfile Zip file reading.
+     * @param zis ZipInputStream to index
+     * @param textParser the parser used to process documents.
+     * @throws IOException If the file or directory cannot be indexed.
+     */
+    private void indexZip(IndexWriter writer, File zipFile, TextParser textParser) {
+        ZipEntry ze;
+        try (FileInputStream fis = new FileInputStream(zipFile);
+                ZipInputStream zis = new ZipInputStream(fis)) {
+        //Iterate over every file inside zip.
+            while ( (ze = zis.getNextEntry()) != null ) {
 
+                // Index file read.
+                // Create a new empty document.
+                Document doc = new Document();
+
+                // Add the path of the file as a field named "docID".  Use a
+                // field that is indexed (i.e. searchable), but don't tokenize 
+                // the field into separate words and don't index term frequency
+                // or positional information:
+                Field idField = new Field("docID", zipFile.getPath()+"/"+ze.getName(),
+                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                idField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                doc.add(idField);
+                // Do the same with the name
+                Field nameField = new Field("name", zipFile.getPath()+"/"+ze.getName(),
+                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS);
+                nameField.setIndexOptions(IndexOptions.DOCS_ONLY);
+                doc.add(nameField);
+
+                // read file
+                byte[] byteContent = new byte[(int) ze.getSize()];
+                zis.read(byteContent);
+                // Add the contents of the file to a field named "contents".
+                doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
+
+                // New index, so we just add the document (no old document can be there)
+                System.out.println("Adding " + ze);
+                writer.addDocument(doc);
+
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+    }
+    
     /**
      * Stores (partially or completely) a previously created index in memory.
      *
@@ -204,14 +270,34 @@ public class LuceneIndex implements Index {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
             System.err.println(ex.getMessage());
         }
-
+        
+        // Creating a HashMap to map document names with its position in Lucene array.
+        namesMap = new HashMap<>();
+        for (int i = 0; i < reader.numDocs(); i++) {
+            try {
+                namesMap.put(reader.document(i).getFieldable("docID").stringValue(), i);
+            } catch (IOException ex) {
+                System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+            }
+        }
     }
 
+    /**
+     * Returns index path.
+     *
+     * @return index path.
+     */
     @Override
     public String getPath() {
         return indexPath;
     }
 
+    /**
+     * Returns a list containing every document ID in the index.
+     *
+     * @return a list containing every document ID in the index.
+     */
     @Override
     public List<String> getDocIds() {
         // If the index has not been loaded, return null.
@@ -240,7 +326,22 @@ public class LuceneIndex implements Index {
      */
     @Override
     public TextDocument getDocument(String docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (reader == null) {
+            return null;
+        }
+        Integer id = namesMap.get(docId);
+        if (id == null) {
+            return null;
+        }
+        Document doc;
+        try {
+            doc = reader.document(id);
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return null;
+        }
+        return new TextDocument(docId, doc.getFieldable("name").stringValue());
     }
 
     /**
@@ -259,10 +360,11 @@ public class LuceneIndex implements Index {
         HashSet<String> termsSet = new HashSet<>();
         List<String> termsList = new ArrayList<>();
 
-        // Interte over the documents
+        // Iterate over the documents
+        int j = reader.numDocs();
         for (int i = 0; i < reader.numDocs(); ++i) {
             try {
-                TermFreqVector freqVector = reader.getTermFreqVector(i, "content");
+                TermFreqVector freqVector = reader.getTermFreqVector(i, "contents");
                 termsSet.addAll(Arrays.asList(freqVector.getTerms()));
             } catch (IOException ex) {
                 System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
@@ -284,13 +386,15 @@ public class LuceneIndex implements Index {
     public List<Posting> getTermPostings(String term) {
         List<Posting> lp = new ArrayList<>();
         try {
-            TermPositions tp = reader.termPositions(new Term("content", term));
+            TermPositions tp = reader.termPositions(new Term("contents", term));
+            //For every tuple in tp, get doc name and the list of positions for the term
             while (tp.next()) {
                 List<Long> position_list = new ArrayList<>();
                 for (int i = 0; i < tp.freq(); i++) {
+                    position_list.add(new Long(tp.nextPosition()));
                 }
-                //Posting p = new Posting();
-                //lp.add(p);
+                String docID = reader.document(tp.doc()).getFieldable("docID").stringValue();
+                lp.add(new Posting(term, docID, position_list));
             }
         } catch (IOException ex) {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
@@ -313,8 +417,6 @@ public class LuceneIndex implements Index {
      * Main class for Lucene index.
      *
      * It indexes a set of documents, creating an index in the output directory.
-     * If the index already exists, then, new documents will be added to the
-     * index, otherwise, a new index is built.
      *
      * @param args The following arguments are used: "docs_path": Path to the
      * directory containing the documents to be indexed. "index_path": Path to
