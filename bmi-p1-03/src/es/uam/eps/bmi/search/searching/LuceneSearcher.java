@@ -153,6 +153,9 @@ public class LuceneSearcher implements Searcher {
                             }
                         });
                     }
+                    query = scanner.nextLine();
+                } else{
+                    return;
                 }
             }
         }
