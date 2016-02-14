@@ -98,6 +98,7 @@ public class TestSearcher {
         try {
             String queriesLine = queriesReader.readLine();
             while (queriesLine != null) {
+                // Dont read the number
                 queriesList.add(queriesLine.split(":")[1]);
                 queriesLine = queriesReader.readLine();
             }
@@ -108,23 +109,26 @@ public class TestSearcher {
         }
 
         // Make the queries and store the results.
-        queriesList.forEach((String query) -> {
+        for (int i = 0; i < queriesList.size(); ++i){
             // Search and get the document list.
-            List<ScoredTextDocument> retrievedList = luceneSearcher.search(query);
+            List<ScoredTextDocument> retrievedList = luceneSearcher.search(queriesList.get(i));
             try {
                 String relevanceLine = relevanceReader.readLine();
                 String[] relevanceDocuments = relevanceLine.split("\t");
-                List<String> relevanceDocumentsList = Arrays.asList(relevanceDocuments);
+                // Don't read the number
+                List<String> relevanceDocumentsList = Arrays.asList(relevanceDocuments).subList(1, relevanceDocuments.length);
                 // P@5
-                //System.out.println(precision(retrievedList, relevanceDocumentsList.subList(1, relevanceDocumentsList.size() - 1), 5));
+                System.out.print("Query " + (i+1) + " P@5: ");
+                System.out.println(precision(retrievedList, relevanceDocumentsList, 5));
                 // P@10
-                //System.out.println(precision(retrievedList, relevanceDocumentsList.subList(1, relevanceDocumentsList.size() - 1), 10));
-                System.out.println(retrievedList);
+                System.out.print("Query " + (i+1) + " P@10: ");
+                System.out.println(precision(retrievedList, relevanceDocumentsList, 10));
+
             } catch (IOException ex) {
                 System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
                 System.err.println(ex.getMessage());
             }
-        });
+        };
     }
 
     /**
@@ -160,15 +164,24 @@ public class TestSearcher {
      * Returns the fraction of the documents retrieved that are relevant to the
      * user's information need.
      *
-     * @param retrievedDocuments List of retrieved documents.
-     * @param relevantDocuments List of relevant documents.
+     * @param retrievedList List of retrieved documents.
+     * @param relevantList List of relevant documents.
      * @param n n value for the precision to be calculated with P@n measure.
      * @return the fraction of the documents retrieved that are relevant to the
      * user's information need.
      */
-    public static double precision(List<ScoredTextDocument> retrievedDocuments, List<String> relevantDocuments, int n) {
+    public static double precision(List<ScoredTextDocument> retrievedList, List<String> relevantList, int n) {
         int intersectionCount = 0;
-        intersectionCount = retrievedDocuments.stream().filter((t) -> (relevantDocuments.contains(t.getDocID()))).map((_item) -> 1).reduce(intersectionCount, Integer::sum);
-        return ((double) intersectionCount / (double) retrievedDocuments.size());
+
+        for (ScoredTextDocument std : retrievedList) {
+            String[] nameArray = std.getDocID().split("/");
+            String name = nameArray[nameArray.length - 1];
+            name = name.substring(0, name.lastIndexOf("."));
+            if (relevantList.contains(name)) {
+                intersectionCount++;
+            }
+        }
+
+        return ((double) intersectionCount / (double) retrievedList.size());
     }
 }

@@ -45,6 +45,7 @@ public class LuceneSearcher implements Searcher {
 
     /* Constant */
     private static final int TOP = 5;
+    private static final int N_SEARCH = 10;
 
     /* Attributes */
     private IndexSearcher indexSearcher;
@@ -86,7 +87,7 @@ public class LuceneSearcher implements Searcher {
             Query q = parser.parse(query);
 
             // Get results.
-            ScoreDoc[] resultArray = indexSearcher.search(q, TOP).scoreDocs;
+            ScoreDoc[] resultArray = indexSearcher.search(q, N_SEARCH).scoreDocs;
 
             // Build result list.
             TreeSet sortedSet = new TreeSet();
@@ -146,7 +147,7 @@ public class LuceneSearcher implements Searcher {
                         System.out.println("No results.");
                     } else {
                         System.out.println("Showing top " + TOP + " documents:");
-                        resultList.forEach((ScoredTextDocument t) -> {
+                        resultList.subList(0, TOP).forEach((ScoredTextDocument t) -> {
                             TextDocument document = luceneIndex.getDocument(t.getDocID());
                             if (document != null) {
                                 System.out.println(document.getName());
