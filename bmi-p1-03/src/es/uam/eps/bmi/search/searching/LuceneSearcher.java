@@ -82,7 +82,7 @@ public class LuceneSearcher implements Searcher {
             // Create analyzer
             Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
             // Create query parser
-            QueryParser parser = new QueryParser(Version.LUCENE_36, "content", analyzer);
+            QueryParser parser = new QueryParser(Version.LUCENE_36, "contents", analyzer);
             Query q = parser.parse(query);
 
             // Get results.
@@ -135,7 +135,7 @@ public class LuceneSearcher implements Searcher {
 
             // Ask for queries.
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Enter a query (press enter to finish): ");
+            System.out.print("Enter a query (press enter to finish): ");
             String query = scanner.nextLine();
             while (!query.equals("")) {
                 // Show results.
@@ -153,6 +153,7 @@ public class LuceneSearcher implements Searcher {
                             }
                         });
                     }
+                    System.out.print("Enter a query (press enter to finish): ");
                     query = scanner.nextLine();
                 } else{
                     return;

@@ -88,6 +88,6 @@ public class ScoredTextDocument implements Comparable {
         // function returns Math.ceil(0.1) = 1, because the documents are not 
         // equal.
         ScoredTextDocument scoredTextDocument = (ScoredTextDocument) t;
-        return (int) (this.score - scoredTextDocument.score);
+        return Double.compare(this.score, scoredTextDocument.score);
     }
 }
