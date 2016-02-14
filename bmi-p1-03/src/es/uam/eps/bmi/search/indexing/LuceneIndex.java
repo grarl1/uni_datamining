@@ -21,7 +21,6 @@ import es.uam.eps.bmi.search.parsing.HTMLSimpleParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,7 +138,7 @@ public class LuceneIndex implements Index {
      * @param textParser the parser used to process documents.
      * @throws IOException If the file or directory cannot be indexed.
      */
-    private void indexDocuments(IndexWriter writer, File file, TextParser textParser) throws IOException {
+    private void indexDocuments(IndexWriter writer, File file, TextParser textParser) {
 
         // Make the index if the file/directory is readable.
         if (file.canRead()) {
@@ -157,16 +156,12 @@ public class LuceneIndex implements Index {
                 }
             } // The file object represents a file (not a directory).
             else {
-
-                try (FileInputStream fis = new FileInputStream(file);
-                        ZipInputStream zis = new ZipInputStream(fis)) {
-
-                    // If file is a ZIP, zis.getNextEntry() returns not null.
-                    if ( zis.getNextEntry() != null ) { 
-                        zis.close();
-                        indexZip(writer, file, textParser);
-                    }
-                    else { // if file is not a ZIP
+                // Test if file is a zip.
+                if ( isZipFile(file) ) { 
+                    indexZip(writer, file, textParser);
+                }
+                else {
+                    try (FileInputStream fis = new FileInputStream(file)) {
                         // Create a new empty document.
                         Document doc = new Document();
 
@@ -191,11 +186,10 @@ public class LuceneIndex implements Index {
                         // New index, so we just add the document (no old document can be there)
                         System.out.println("Adding " + file);
                         writer.addDocument(doc);
+                    } catch (IOException ex) {
+                        System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                        System.err.println(ex.getMessage());
                     }
-
-                } catch (FileNotFoundException ex) {
-                    System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
-                    System.err.println(ex.getMessage());
                 }
             }
         }
@@ -237,10 +231,14 @@ public class LuceneIndex implements Index {
                 doc.add(nameField);
 
                 // read file
-                byte[] byteContent = new byte[(int) ze.getSize()];
-                zis.read(byteContent);
+                byte[] byteContent = new byte[2048];
+                int justRead;
+                String s = "";
+                while ((justRead = zis.read(byteContent)) > 0) {
+                    s += new String(byteContent, 0, justRead);
+                }
                 // Add the contents of the file to a field named "contents".
-                doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
+                doc.add(new Field("contents", textParser.parse(s), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 
                 // New index, so we just add the document (no old document can be there)
                 System.out.println("Adding " + ze);
@@ -404,7 +402,7 @@ public class LuceneIndex implements Index {
     }
 
     /**
-     * Returns a true if the index is loaded, false otherwise.
+     * Returns true if the index is loaded, false otherwise.
      *
      * @return true if index is loaded, false otherwise.
      */
@@ -413,6 +411,25 @@ public class LuceneIndex implements Index {
         return reader != null;
     }
 
+    /**
+     * Returns true if file passed is a zip file, false otherwise.
+     * 
+     * @param file file to test
+     * @return true if file passed is a zip file, false otherwise.
+     */
+    private boolean isZipFile(File file) {
+        try (FileInputStream fis = new FileInputStream(file);
+                ZipInputStream zis = new ZipInputStream(fis)) {
+            if (zis.getNextEntry() != null){
+                return true;
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return false;
+    }
+    
     /**
      * Main class for Lucene index.
      *
@@ -436,4 +453,5 @@ public class LuceneIndex implements Index {
         LuceneIndex luceneIndex = new LuceneIndex();
         luceneIndex.build(args[0], args[1], new HTMLSimpleParser());
     }
+
 }
