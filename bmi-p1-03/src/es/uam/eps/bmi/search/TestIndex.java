@@ -17,12 +17,13 @@
 package es.uam.eps.bmi.search;
 
 import es.uam.eps.bmi.search.indexing.LuceneIndex;
-import es.uam.eps.bmi.search.indexing.Posting;
 import es.uam.eps.bmi.search.parsing.HTMLSimpleParser;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 
 /**
  *
@@ -34,7 +35,7 @@ public class TestIndex {
     /**
      * Name of the output file containing stats about the index.
      */
-    private final static String STATS_FILE = "indexstats";
+    private final static String STATS_FILE = "output/indexstats";
 
     /**
      * Main class for Lucene index.
@@ -67,19 +68,27 @@ public class TestIndex {
 
         if (luceneIndex.isLoaded()) {
             //Open statistics output file
-            try (FileWriter fw = new FileWriter(new File(STATS_FILE), false)) {
+            File f = new File(STATS_FILE);
+            f.getParentFile().mkdirs();
+            try (FileWriter fw = new FileWriter(f, false)) {
                 // Get stats from index and write them to the file.
                 int totalDocuments = luceneIndex.getReader().numDocs();
                 List<String> terms = luceneIndex.getTerms();
                 for (String term : terms) {
-                    List<Posting> lp = luceneIndex.getTermPostings(term);
+                    //List<Posting> lp = luceneIndex.getTermPostings(term);
                     long frequency = 0;
-                    for (Posting p : lp) {
-                        frequency += p.getTermPositions().size();
+                    long nDocs = 0;
+                    TermDocs td = luceneIndex.getReader().termDocs(new Term("contents", term));
+                    while (td.next()) {
+                        frequency += td.freq();
+                        nDocs++;
                     }
+                    //for (Posting p : lp) {
+                    //    frequency += p.getTermFrequency();
+                    //}
                     double tf = 1 + (Math.log(frequency) / Math.log(2));
-                    double idf = Math.log(totalDocuments / lp.size());
-                    String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, lp.size(), tf, idf);
+                    double idf = Math.log(totalDocuments / nDocs);
+                    String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, nDocs, tf, idf);
                     fw.write(outputString);
                 }
             } catch (IOException ex) {

@@ -91,7 +91,7 @@ public class LuceneIndex implements Index {
 
         // Start timing.
         Date start = new Date();
-        System.out.println("Indexing documents from '" + inputCollectionPath + "'...");
+        System.out.println("Indexing documents from '" + inputCollectionPath + "', this may take a while...");
 
         // Create directory.
         Directory outputDir;
@@ -181,7 +181,6 @@ public class LuceneIndex implements Index {
                         doc.add(new Field("contents", textParser.parse(new String(byteContent)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 
                         // New index, so we just add the document (no old document can be there)
-                        System.out.println("Adding " + file);
                         writer.addDocument(doc);
                     } catch (IOException ex) {
                         System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
@@ -238,7 +237,6 @@ public class LuceneIndex implements Index {
                 doc.add(new Field("contents", textParser.parse(s), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 
                 // New index, so we just add the document (no old document can be there)
-                System.out.println("Adding " + ze);
                 writer.addDocument(doc);
 
             }

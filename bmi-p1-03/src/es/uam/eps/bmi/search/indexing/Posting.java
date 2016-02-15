@@ -35,6 +35,9 @@ public class Posting {
     /*Position of the term within the document*/
     private final List<Long> termPositions;
 
+    /*Amount of times the term appears in the document*/
+    private final int termFrequency;
+    
     /**
      * Default constructor for <code>TextDocument</code> class.
      *
@@ -46,6 +49,7 @@ public class Posting {
         this.term = term;
         this.docID = docID;
         this.termPositions = termPositions;
+        this.termFrequency = this.termPositions.size();
     }
     
     /**
@@ -75,5 +79,14 @@ public class Posting {
      */
     public List<Long> getTermPositions() {
         return termPositions;
+    }
+    
+    /**
+     * Returns the amount of times the term appears in the document.
+     *
+     * @return the amount of times the term appears in the document.
+     */
+    public int getTermFrequency() {
+        return termFrequency;
     }
 }
