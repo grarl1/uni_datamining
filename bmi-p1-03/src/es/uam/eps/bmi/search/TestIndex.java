@@ -30,23 +30,20 @@ import java.util.List;
  * @author Guillermo Ruiz Álvarez
  */
 public class TestIndex {
-    
+
     /**
      * Name of the output file containing stats about the index.
      */
     private final static String STATS_FILE = "indexstats";
-    
+
     /**
      * Main class for Lucene index.
      *
-     * Given a set of documents, creates an index in the output directory.
-     * Then loads the index and creates a document named <code>STATS_FILE</code> 
-     * that contains a line for each term, reporting:
-     *  String term
-     *  Term frequency
-     *  Number of files containing such term
-     *  TF
-     *  IDF
+     * Given a set of documents, creates an index in the output directory. Then
+     * loads the index and creates a document named <code>STATS_FILE</code> that
+     * contains a line for each term, reporting: </br>
+     * "'Term string' 'Term frequency' 'Number of files containing such term'
+     * 'TF' 'IDF'"
      *
      * @param args The following arguments are used: "docs_path": Path to the
      * directory containing the documents to be indexed. "index_path": Path to
@@ -67,7 +64,7 @@ public class TestIndex {
         luceneIndex.build(args[0], args[1], new HTMLSimpleParser());
         // Load it
         luceneIndex.load(args[1]);
-        
+
         if (luceneIndex.isLoaded()) {
             //Open statistics output file
             try (FileWriter fw = new FileWriter(new File(STATS_FILE), false)) {
@@ -85,13 +82,11 @@ public class TestIndex {
                     String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, lp.size(), tf, idf);
                     fw.write(outputString);
                 }
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
                 System.err.println(ex.getMessage());
             }
-        }
-        else {
+        } else {
             System.err.printf("ERROR: Could not load index.");
         }
     }

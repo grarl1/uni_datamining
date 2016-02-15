@@ -81,11 +81,8 @@ public class LuceneIndex implements Index {
 
         // Input control
         File docsPath = new File(inputCollectionPath);
-        if (!docsPath.exists() || !docsPath.isDirectory()) {
-            System.err.printf("%s: not a directory.\n", docsPath.getAbsolutePath());
-            return;
-        } else if (!docsPath.canRead()) {
-            System.err.printf("Couldn't read in %s.\n", docsPath.getAbsolutePath());
+        if (!docsPath.exists() || !docsPath.canRead()) {
+            System.err.printf("%s does not exist or is not readable.\n", docsPath.getAbsolutePath());
             return;
         }
 
