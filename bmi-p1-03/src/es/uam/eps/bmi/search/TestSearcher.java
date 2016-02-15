@@ -22,10 +22,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Class used to test the searcher.
@@ -34,6 +37,8 @@ import java.util.List;
  * @author Guillermo Ruiz Álvarez
  */
 public class TestSearcher {
+
+    private static final String SEARCH_STATS_FILE = "output/searchstats";
 
     /**
      * Main class for testing.
@@ -45,12 +50,11 @@ public class TestSearcher {
      */
     public static void main(String[] args) {
         // Input control
-        if (args.length != 4) {
-            System.err.printf("Usage: %s index_path queries_file_path relevance_file_path output_file_path\n"
+        if (args.length != 3) {
+            System.err.printf("Usage: %s index_path queries_file_path relevance_file_path\n"
                     + "\tindex_path: Path to a directory containing a Lucene index.\n"
                     + "\tqueries_file_path: Path to the file containing the queries to test.\n"
-                    + "\trelevance_file_path: Path to the file containing the relevant documents.\n"
-                    + "\toutput_file_path: Path to the output file.\n",
+                    + "\trelevance_file_path: Path to the file containing the relevant documents.\n",
                     TestSearcher.class.getSimpleName());
             return;
         }
@@ -58,7 +62,6 @@ public class TestSearcher {
         // Create the files.
         File queriesFile = new File(args[1]);
         File relevanceFile = new File(args[2]);
-        File outputFile = new File(args[3]);
 
         // Check the files.
         if (!areReadable(queriesFile, relevanceFile)) {
@@ -79,14 +82,22 @@ public class TestSearcher {
         LuceneSearcher luceneSearcher = new LuceneSearcher();
         luceneSearcher.build(luceneIndex);
 
-        // Construct the readers.
+        // Construct the readers and the writer.
         BufferedReader queriesReader;
         BufferedReader relevanceReader;
+        File outputFile = new File(SEARCH_STATS_FILE);
+        outputFile.getParentFile().mkdirs();
+        FileWriter fileWriter;
         try {
             queriesReader = new BufferedReader(new FileReader(queriesFile));
             relevanceReader = new BufferedReader(new FileReader(relevanceFile));
+            fileWriter = new FileWriter(outputFile);
         } catch (FileNotFoundException ex) {
             System.err.println("Couldn't find the file:" + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
             System.err.println(ex.getMessage());
             return;
         }
@@ -109,7 +120,7 @@ public class TestSearcher {
         }
 
         // Make the queries and store the results.
-        for (int i = 0; i < queriesList.size(); ++i){
+        for (int i = 0; i < queriesList.size(); ++i) {
             // Search and get the document list.
             List<ScoredTextDocument> retrievedList = luceneSearcher.search(queriesList.get(i));
             try {
@@ -117,18 +128,25 @@ public class TestSearcher {
                 String[] relevanceDocuments = relevanceLine.split("\t");
                 // Don't read the number
                 List<String> relevanceDocumentsList = Arrays.asList(relevanceDocuments).subList(1, relevanceDocuments.length);
-                // P@5
-                System.out.print("Query " + (i+1) + " P@5: ");
-                System.out.println(precision(retrievedList, relevanceDocumentsList, 5));
-                // P@10
-                System.out.print("Query " + (i+1) + " P@10: ");
-                System.out.println(precision(retrievedList, relevanceDocumentsList, 10));
 
+                // Calculate results.
+                double pAt5 = precision(retrievedList, relevanceDocumentsList, 5);
+                double pAt10 = precision(retrievedList, relevanceDocumentsList, 10);
+
+                // Print results.
+                fileWriter.write((i + 1) + "\t" + pAt5 + "\t" + pAt10 + "\n");
             } catch (IOException ex) {
                 System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
                 System.err.println(ex.getMessage());
+                return;
             }
-        };
+        }
+        try {
+            fileWriter.close();
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
     }
 
     /**
@@ -173,8 +191,9 @@ public class TestSearcher {
     public static double precision(List<ScoredTextDocument> retrievedList, List<String> relevantList, int n) {
         int intersectionCount = 0;
 
-        for (ScoredTextDocument std : retrievedList) {
-            String[] nameArray = std.getDocID().split("/");
+        // Get the intersection count of retrieved (up to n) and relevant documents.
+        for (int i = 0; i < n && i < retrievedList.size(); ++i) {
+            String[] nameArray = retrievedList.get(i).getDocID().split("/");
             String name = nameArray[nameArray.length - 1];
             name = name.substring(0, name.lastIndexOf("."));
             if (relevantList.contains(name)) {
@@ -182,6 +201,6 @@ public class TestSearcher {
             }
         }
 
-        return ((double) intersectionCount / (double) retrievedList.size());
+        return ((double) intersectionCount / (double) n);
     }
 }

@@ -90,14 +90,13 @@ public class LuceneSearcher implements Searcher {
             ScoreDoc[] resultArray = indexSearcher.search(q, N_SEARCH).scoreDocs;
 
             // Build result list.
-            TreeSet sortedSet = new TreeSet();
+            ArrayList<ScoredTextDocument> resultList = new ArrayList();
             for (ScoreDoc scoreDoc : resultArray) {
-                sortedSet.add(new ScoredTextDocument(indexSearcher.doc(scoreDoc.doc).getFieldable("docID").stringValue(), scoreDoc.score));
+                resultList.add(new ScoredTextDocument(indexSearcher.doc(scoreDoc.doc).getFieldable("docID").stringValue(), scoreDoc.score));
             }
 
             // Sort the list and return it.
-            ArrayList<ScoredTextDocument> resultList = new ArrayList(sortedSet);
-            Collections.reverse(resultList);
+            Collections.sort(resultList, Collections.reverseOrder());
             return resultList;
         } catch (ParseException ex) {
             System.err.println("Exception caught while parsing the query: " + ex.getClass().getSimpleName());
@@ -147,7 +146,11 @@ public class LuceneSearcher implements Searcher {
                         System.out.println("No results.");
                     } else {
                         System.out.println("Showing top " + TOP + " documents:");
-                        resultList.subList(0, TOP).forEach((ScoredTextDocument t) -> {
+                        // Get sublist.
+                        if (resultList.size() >= TOP) {
+                            resultList = resultList.subList(0, TOP);
+                        }
+                        resultList.forEach((ScoredTextDocument t) -> {
                             TextDocument document = luceneIndex.getDocument(t.getDocID());
                             if (document != null) {
                                 System.out.println(document.getName());
@@ -156,7 +159,7 @@ public class LuceneSearcher implements Searcher {
                     }
                     System.out.print("Enter a query (press enter to finish): ");
                     query = scanner.nextLine();
-                } else{
+                } else {
                     return;
                 }
             }
