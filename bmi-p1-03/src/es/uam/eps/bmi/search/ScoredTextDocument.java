@@ -17,7 +17,7 @@
 package es.uam.eps.bmi.search;
 
 /**
- * Class used to store a text document score resulting from a query.
+ * Class used to store a scored text document resulting from a query.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez
@@ -70,7 +70,7 @@ public class ScoredTextDocument implements Comparable {
      * @param t The object to be compared.
      * @return a negative integer, zero, or a positive integer as this object is
      * less than, equal to, or greater than the specified object. If the
-     * argument is not a <code>ScoredTextDocument</code> then returns -1
+     * argument is not a <code>ScoredTextDocument</code> then returns -1.
      */
     @Override
     public int compareTo(Object t) {

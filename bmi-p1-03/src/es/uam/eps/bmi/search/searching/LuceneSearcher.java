@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-import java.util.TreeSet;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
@@ -45,7 +44,7 @@ public class LuceneSearcher implements Searcher {
 
     /* Constant */
     private static final int TOP = 5;
-    private static final int N_SEARCH = 10;
+    private static final int MAX_RESULTS = 10;
 
     /* Attributes */
     private IndexSearcher indexSearcher;
@@ -87,7 +86,7 @@ public class LuceneSearcher implements Searcher {
             Query q = parser.parse(query);
 
             // Get results.
-            ScoreDoc[] resultArray = indexSearcher.search(q, N_SEARCH).scoreDocs;
+            ScoreDoc[] resultArray = indexSearcher.search(q, MAX_RESULTS).scoreDocs;
 
             // Build result list.
             ArrayList<ScoredTextDocument> resultList = new ArrayList();
@@ -111,6 +110,9 @@ public class LuceneSearcher implements Searcher {
 
     /**
      * Main class for Lucene searcher.
+     *
+     * Builds a searcher and asks the user for queries, showing the TOP 5
+     * results.
      *
      * @param args The following arguments are used: index_path: Path to a
      * directory containing a Lucene index.

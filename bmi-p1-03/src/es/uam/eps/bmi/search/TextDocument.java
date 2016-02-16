@@ -89,7 +89,7 @@ public class TextDocument {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final TextDocument textDocument = (TextDocument) obj;
+        TextDocument textDocument = (TextDocument) obj;
         return id.equals(textDocument.id);
     }
 }

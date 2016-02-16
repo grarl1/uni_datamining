@@ -448,5 +448,4 @@ public class LuceneIndex implements Index {
         LuceneIndex luceneIndex = new LuceneIndex();
         luceneIndex.build(args[0], args[1], new HTMLSimpleParser());
     }
-
 }

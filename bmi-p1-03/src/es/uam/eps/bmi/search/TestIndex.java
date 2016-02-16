@@ -26,6 +26,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 
 /**
+ * Class used to test the index.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez
@@ -40,9 +41,9 @@ public class TestIndex {
     /**
      * Main class for Lucene index.
      *
-     * Given a set of documents, creates an index in the output directory. Then
+     * Given a set of documents, creates an index in the output directory. Then,
      * loads the index and creates a document named <code>STATS_FILE</code> that
-     * contains a line for each term, reporting: </br>
+     * contains a line for each term, reporting: <br>
      * "'Term string' 'Term frequency' 'Number of files containing such term'
      * 'TF' 'IDF'"
      *
@@ -75,7 +76,6 @@ public class TestIndex {
                 int totalDocuments = luceneIndex.getReader().numDocs();
                 List<String> terms = luceneIndex.getTerms();
                 for (String term : terms) {
-                    //List<Posting> lp = luceneIndex.getTermPostings(term);
                     long frequency = 0;
                     long nDocs = 0;
                     TermDocs td = luceneIndex.getReader().termDocs(new Term("contents", term));
@@ -83,9 +83,6 @@ public class TestIndex {
                         frequency += td.freq();
                         nDocs++;
                     }
-                    //for (Posting p : lp) {
-                    //    frequency += p.getTermFrequency();
-                    //}
                     double tf = 1 + (Math.log(frequency) / Math.log(2));
                     double idf = Math.log(totalDocuments / nDocs);
                     String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, nDocs, tf, idf);

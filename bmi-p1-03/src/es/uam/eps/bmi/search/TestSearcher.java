@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Class used to test the searcher.
@@ -38,10 +36,17 @@ import java.util.logging.Logger;
  */
 public class TestSearcher {
 
-    private static final String SEARCH_STATS_FILE = "output/searchstats";
+    /**
+     * Name of the output file containing the P@5 and P@10 measures.
+     */
+    private static final String STATS_FILE = "output/searchstats";
 
     /**
-     * Main class for testing.
+     * Main class for testing the searcher.
+     *
+     * This function makes several queries and calculates the P@5 and P@10
+     * measures, comparing the retrieved documents with the ones given in the
+     * file of relevance documents.
      *
      * @param args The following arguments are used: index_path: Path to a
      * directory containing a Lucene index. queries_file_path: Path to the file
@@ -85,7 +90,7 @@ public class TestSearcher {
         // Construct the readers and the writer.
         BufferedReader queriesReader;
         BufferedReader relevanceReader;
-        File outputFile = new File(SEARCH_STATS_FILE);
+        File outputFile = new File(STATS_FILE);
         outputFile.getParentFile().mkdirs();
         FileWriter fileWriter;
         try {
