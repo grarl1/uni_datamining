@@ -1,5 +1,6 @@
-Autores:
-	Guillermo Ruiz Álvares
+Autores
+========
+	Guillermo Ruiz Álvarez
 	Enrique Cabrerizo Fernández
 
 La clase testIndex generará un archivo indexstats en una carpeta output/ creada
@@ -19,7 +20,8 @@ un archivo auxiliar que se elimina al terminar el script. Si por alguna razón s
 conservar dicho archivo (por ejemplo para ver la lista de términos ordenada), hay que comentar
 la última línea del script.
 
-IMPORTANTE:
+IMPORTANTE
+==========
 
 El primer argumento de testIndex debe ser la ruta a indexar. Si el argumento es una carpeta, 
 se indexará TODO el contenido de dicha carpeta, si es un archivo, se indexará solamente dicho archivo.
