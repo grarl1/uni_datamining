@@ -17,8 +17,16 @@
 package es.uam.eps.bmi.search.indexing;
 
 import es.uam.eps.bmi.search.TextDocument;
+import es.uam.eps.bmi.search.parsing.HTMLSimpleParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Basic index class.
@@ -28,6 +36,11 @@ import java.util.List;
  */
 public class BasicIndex implements Index {
 
+    /* Attributes */
+    private String indexPath; // Path where the index is indexed
+    private IndexWriter reader = null; //TODO change for IndexReader    
+    private HashMap<String, Integer> namesMap = null; //TODO remove if not needed
+    
     /**
      * Builds an index from a collection of text documents.
      *
@@ -38,7 +51,30 @@ public class BasicIndex implements Index {
      */
     @Override
     public void build(String inputCollectionPath, String outputIndexPath, TextParser textParser) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // Input control
+        File docsPath = new File(inputCollectionPath);
+        if (!docsPath.exists() || !docsPath.canRead()) {
+            System.err.printf("%s does not exist or is not readable.\n", docsPath.getAbsolutePath());
+            return;
+        }
+
+        // Attributes
+        this.indexPath = outputIndexPath;
+
+        // Start timing.
+        Date start = new Date();
+        System.out.println("Indexing documents from '" + inputCollectionPath + "', this may take a while...");
+
+        // Create writer.
+        IndexWriter writer = new IndexWriter(outputIndexPath);
+        // Start indexing.
+        indexDocuments(writer, new File(inputCollectionPath), textParser);
+
+        // Stop timing and print elapsed time.
+        Date end = new Date();
+        System.out.println(end.getTime() - start.getTime() + " total milliseconds");
+        reader = null;
+        namesMap = null;
     }
 
     /**
@@ -113,4 +149,138 @@ public class BasicIndex implements Index {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * Indexes the given file using the given writer.
+     *
+     * @param writer Writer to the path where the index will be stored.
+     * @param file The file or directory whose documents will be index.
+     * @param textParser the parser used to process documents.
+     * @throws IOException If the file or directory cannot be indexed.
+     */
+    private void indexDocuments(IndexWriter writer, File file, TextParser textParser) {
+
+        // Make the index if the file/directory is readable.
+        if (file.canRead()) {
+
+            // If the file represents a directory, call this function recursively
+            // for each file within.
+            if (file.isDirectory()) {
+                // Files within the directory
+                String[] files = file.list();
+                // Avoid IO errors.
+                if (files != null) {
+                    for (String fileInside : files) {
+                        indexDocuments(writer, new File(file, fileInside), textParser);
+                    }
+                }
+            } // The file object represents a file (not a directory).
+            else {
+                // Test if file is a zip.
+                if ( isZipFile(file) ) { 
+                    indexZip(writer, file, textParser);
+                }
+                else {
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                        String docname = file.getPath();
+                        // Read the whole content from file.
+                        byte[] byteContent = new byte[(int) file.length()];
+                        fis.read(byteContent);
+                        //Add document to the index
+                        writer.add(docname, textParser.parse(new String(byteContent)));
+
+                    } catch (IOException ex) {
+                        System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                        System.err.println(ex.getMessage());
+                    }
+                }
+            }
+        }
+        try {
+            writer.close();
+        }
+        catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * Indexes every file inside zip file passed.
+     * Behavior undefined for zip files containing folders.
+     *
+     * @param writer Writer to the path where the index will be stored.
+     * @param zipfile Zip file reading.
+     * @param zis ZipInputStream to index
+     * @param textParser the parser used to process documents.
+     * @throws IOException If the file or directory cannot be indexed.
+     */
+    private void indexZip(IndexWriter writer, File zipFile, TextParser textParser) {
+        ZipEntry ze;
+        try (FileInputStream fis = new FileInputStream(zipFile);
+                ZipInputStream zis = new ZipInputStream(fis)) {
+        //Iterate over every file inside zip.
+            while ( (ze = zis.getNextEntry()) != null ) {
+
+                String docname = zipFile.getPath()+"/"+ze.getName();
+
+                // read file
+                byte[] byteContent = new byte[2048];
+                int justRead;
+                String s = "";
+                while ((justRead = zis.read(byteContent)) > 0) {
+                    s += new String(byteContent, 0, justRead);
+                }
+                //add document to the index
+                writer.add(docname, textParser.parse(s));
+
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * Returns true if file passed is a zip file, false otherwise.
+     * 
+     * @param file file to test
+     * @return true if file passed is a zip file, false otherwise.
+     */
+    private boolean isZipFile(File file) {
+        try (FileInputStream fis = new FileInputStream(file);
+                ZipInputStream zis = new ZipInputStream(fis)) {
+            if (zis.getNextEntry() != null){
+                return true;
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return false;
+    }
+    
+    
+    /**
+     * Main class for Basic index.
+     *
+     * It indexes a set of documents, creating an index in the output directory.
+     *
+     * @param args The following arguments are used: "docs_path": Path to the
+     * directory containing the documents to be indexed. "index_path": Path to
+     * the directory to store the index.
+     */
+    public static void main(String[] args) {
+        // Input control
+        if (args.length != 2) {
+            System.err.printf("Usage: %s docs_path index_path\n"
+                    + "\tdocs_path: Path to the directory containing the documents to be used.\n"
+                    + "\tindex_path: Path to a directory to store the index.\n",
+                    BasicIndex.class.getSimpleName());
+            return;
+        }
+
+        // Build the index
+        BasicIndex basicIndex = new BasicIndex();
+        basicIndex.build(args[0], args[1], new HTMLSimpleParser());
+    }
 }
