@@ -81,11 +81,19 @@ public interface Index {
      * @return a list of the postings of the given term.
      */
     public List<Posting> getTermPostings(String term);
-    
+
     /**
      * Returns a true if the index is loaded, false otherwise.
      *
      * @return true if index is loaded, false otherwise.
      */
     public boolean isLoaded();
+
+    /**
+     * Returns the module of the document with the given doc ID.
+     *
+     * @param docID ID of the document whose module will be returned.
+     * @return the module of the document with the given doc ID.
+     */
+    public double getDocModule(int docID);
 }

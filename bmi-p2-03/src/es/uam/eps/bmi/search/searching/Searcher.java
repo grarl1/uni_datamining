@@ -31,14 +31,14 @@ public interface Searcher {
     /**
      * Creates a searcher using the given index.
      *
-     * @param index Index used to create the searcher.
+     * @param index Index used to create the searcher, must be loaded.
      */
     public void build(Index index);
 
     /**
      * Returns a ranking of documents sorted by the score value.
      *
-     * @param query Query used to search.
+     * @param query String query used to search.
      * @return a ranking of documents sorted by the decrementing score value.
      */
     public List<ScoredTextDocument> search(String query);
