@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +68,7 @@ public class TFIDFSearcher implements Searcher {
     @Override
     public List<ScoredTextDocument> search(String query) {
 
-        List<Callable<List<ScoredTextDocument>>> callableList = new ArrayList<>();
+        List<Callable<Map<Integer, ScoredTextDocument>>> callableList = new ArrayList<>();
 
         // Separate the query string by spaces
         String[] terms = query.split(" ");
@@ -82,7 +83,7 @@ public class TFIDFSearcher implements Searcher {
             List<Posting> termPosting = index.getTermPostings(term);
 
             // Create a task for execution (one per term in the query)
-            Callable<List<ScoredTextDocument>> callable = () -> {
+            Callable<Map<Integer, ScoredTextDocument>> callable = () -> {
                 // Map to store the documents.
                 HashMap<Integer, ScoredTextDocument> docMap = new HashMap<>();
 
@@ -116,9 +117,7 @@ public class TFIDFSearcher implements Searcher {
                     }
                 });
 
-                List<ScoredTextDocument> returnList = new ArrayList<>(docMap.values());
-                Collections.sort(returnList, Collections.reverseOrder());
-                return returnList;
+                return docMap;
             };
 
             // Add the future object to the list.
@@ -128,11 +127,11 @@ public class TFIDFSearcher implements Searcher {
         // Wait for the threads to finish all the tasks.
         try {
             // Execute all the tasks.
-            List<Future<List<ScoredTextDocument>>> futureList = this.threadPoolExecutor.invokeAll(callableList);
+            List<Future<Map<Integer, ScoredTextDocument>>> futureList = this.threadPoolExecutor.invokeAll(callableList);
 
             // Wait for the task to be finished and store the results.
-            List<List<ScoredTextDocument>> results = new ArrayList<>();
-            for (Future<List<ScoredTextDocument>> future : futureList) {
+            List<Map<Integer, ScoredTextDocument>> results = new ArrayList<>();
+            for (Future<Map<Integer, ScoredTextDocument>> future : futureList) {
                 results.add(future.get());
             }
 
@@ -154,7 +153,26 @@ public class TFIDFSearcher implements Searcher {
      * @param results List of list to be merged.
      * @return A list of documents sorted by the decrementing score value.
      */
-    private List<ScoredTextDocument> mergeResults(List<List<ScoredTextDocument>> results) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private List<ScoredTextDocument> mergeResults(List<Map<Integer, ScoredTextDocument>> results) {
+
+        // Result map
+        HashMap<Integer, ScoredTextDocument> resultMap = new HashMap<>();
+
+        // Merge all the maps
+        results.stream().forEach((map) -> {
+            map.forEach((Integer docID, ScoredTextDocument scoredDoc) -> {
+                ScoredTextDocument retrieved = resultMap.get(docID);
+                if (retrieved == null) {
+                    resultMap.put(docID, scoredDoc);
+                } else {
+                    retrieved.sumScore(scoredDoc.getScore());
+                }
+            });
+        });
+
+        // Sort the result list.
+        ArrayList<ScoredTextDocument> resultList = new ArrayList<>(resultMap.values());
+        Collections.sort(resultList, Collections.reverseOrder());
+        return resultList;
     }
 }
