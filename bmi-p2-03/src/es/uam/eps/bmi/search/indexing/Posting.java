@@ -16,6 +16,12 @@
  */
 package es.uam.eps.bmi.search.indexing;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,13 +36,13 @@ public class Posting {
     private final String term;
 
     /*Associated document id*/
-    private final String docID;
+    private final int docID;
 
     /*Position of the term within the document*/
-    private final List<Long> termPositions;
+    private List<Integer> termPositions;
 
     /*Amount of times the term appears in the document*/
-    private final int termFrequency;
+    private int termFrequency;
     
     /**
      * Default constructor for <code>TextDocument</code> class.
@@ -45,7 +51,7 @@ public class Posting {
      * @param docID ID of the document.
      * @param termPositions Array of term positions.
      */
-    public Posting(String term, String docID, List<Long> termPositions) {
+    public Posting(String term, int docID, List<Integer> termPositions) {
         this.term = term;
         this.docID = docID;
         this.termPositions = termPositions;
@@ -66,7 +72,7 @@ public class Posting {
      *
      * @return the associated document id.
      */
-    public String getDocID() {
+    public int getDocID() {
         return docID;
     }
 
@@ -77,7 +83,7 @@ public class Posting {
      * @return a list containing the term position within the associated
      * document.
      */
-    public List<Long> getTermPositions() {
+    public List<Integer> getTermPositions() {
         return termPositions;
     }
     
@@ -89,4 +95,70 @@ public class Posting {
     public int getTermFrequency() {
         return termFrequency;
     }
+    
+    /**
+     * Adds a new position to the posting
+     * 
+     * @param pos position to add
+     */
+     public void addPosition(int pos) {
+         this.termPositions.add(pos);
+         this.termFrequency++;
+     }
+     
+     /**
+      * Returns an array of bytes with postings information as follows: </br>
+      * #docID,#positions,position1,position2,...,positionN
+      * 
+      * @throws java.io.IOException
+      * @return array of bytes with format explained
+      */
+     public byte[] positionsToBytes() throws IOException {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         DataOutputStream dos = new DataOutputStream(baos);
+         dos.writeInt(docID);
+         dos.writeInt(termFrequency);
+         for (int l: termPositions){
+             dos.writeInt(l);
+         }
+         dos.flush();
+         dos.close();
+         return baos.toByteArray();
+     }
+     
+     /**
+      * Returns the size of the array returned by positionsToBytes
+      * @return the size of the array returned by positionsToBytes
+      */
+     public int positionsToBytesSize() {
+         return (termFrequency + 2)*Integer.BYTES;
+     }
+     
+     /**
+      * Receives a byte array with consecutive packages formated as the output
+      * of <code>positionToBytes</code> and builds a List of Postings from it.
+      * @param term term String, every posting in the list will be associated to 
+      *             this term.
+      * @param array array containing postings.
+      * @return a List of Postings recovered from array.
+      */
+     public static List<Posting> listFromBytes(String term, byte[] array) {
+        List<Posting> lp = new ArrayList<>();
+        
+        if ((array.length % Integer.BYTES) != 0) { //array is malformed
+            return null;
+        }
+        IntBuffer lb = ByteBuffer.wrap(array).asIntBuffer();
+        for (int i = 0; i<lb.limit(); ) {
+            int docid = lb.get();
+            int postingsSize = lb.get();
+            i+=2;
+            Posting p = new Posting(term, docid, new ArrayList());
+            for (int j=0; j<postingsSize; j++) {
+                p.addPosition(lb.get());
+                i++;
+            }
+        }
+        return lp;
+     }
 }
