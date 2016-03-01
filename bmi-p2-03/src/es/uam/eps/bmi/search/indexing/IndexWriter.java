@@ -26,6 +26,7 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * IndexWriter class.
@@ -37,19 +38,19 @@ public class IndexWriter {
     
     /* Attributes */
     /* default block size to keep in RAM */
-    private static final long BLOCK_DEFAULT = 128 * 1024 * 1024; //128MB
+    private static final int BLOCK_DEFAULT = 128 * 1024 * 1024; //128MB
     /* when block size is greater than this value, a block will be written to disc */
-    private long maxBlockSize;
+    private int maxBlockSize;
     /* maximum amount of RAM to use before writing to disc */
-    private long currentBlockSize;
+    private int currentBlockSize;
     /* Indicates the number of terms gap in termMapFile so that
         only 1 of every termMapSize terms will be written to termMapFile file */
     private static final int TERM_MAP_SIZE = 100;
     
     /* Incremental value every time a new document is added */
-    private long currentDocId = 0;
+    private int currentDocId = 0;
     /* Incremental value every time a new block is written to disc */
-    private long currentBlockId = 0;
+    private int currentBlockId = 0;
     /* Doc modules id, position i of array will correspond to document with docid i */
     double[] docMod = null;
     
@@ -71,11 +72,11 @@ public class IndexWriter {
     private String indexPath;
     
     /* TreeMap to store document names and given numeric id */
-    private TreeMap<Long, String> docsmap;
+    private TreeMap<Integer, String> docsmap;
     /* TreeMap to store current block dictionary */
     private TreeMap<String, List<Posting>> termmap;
     /* Map containing offsets of terms in final index */
-    private TreeMap<String, Long> termsoffset;
+    private TreeMap<String, Integer> termsoffset;
     
     /* Checks if index is already merged so no new files can be added */
     private boolean closed = false;
@@ -95,7 +96,7 @@ public class IndexWriter {
      * @param indexPath path to save index to.
      * @param maxBlockSize maximum block size.
      */
-    public IndexWriter(String indexPath, long maxBlockSize) {
+    public IndexWriter(String indexPath, int maxBlockSize) {
         this.indexPath = indexPath;
         this.maxBlockSize = maxBlockSize;
         this.docsmap = new TreeMap<>();
@@ -115,8 +116,9 @@ public class IndexWriter {
      * @param content string with content of document.
      */
     public void add (String docName, String content) throws IOException {
-        long termPosition = 0;
-        for (String term: basicFilter(content).split("\\s+"))
+        int termPosition = 0;
+        if (closed) return;
+        for (String term: content.split("\\s+"))
         {
             List<Posting> lp;
             if (termmap.containsKey(term)) 
@@ -126,7 +128,7 @@ public class IndexWriter {
                 if (lastposting.getDocID() == currentDocId)
                 { //a list of postings for this document already exists, add position.
                     lastposting.addPosition(termPosition);
-                    currentBlockSize += Long.BYTES;
+                    currentBlockSize += Integer.BYTES;
                 }
                 else 
                 { // create a new posting and add it to the list
@@ -143,7 +145,7 @@ public class IndexWriter {
                 lp = new ArrayList<>();
                 lp.add(p);
                 currentBlockSize += ((term + Character.toString(IndexEntry.delimiter)).length())*Character.BYTES 
-                        + Long.BYTES + (1 + p.positionsToBytesSize());
+                        + Integer.BYTES + (1 + p.positionsToBytesSize());
             }
             termmap.put(term, lp); 
             termPosition++;
@@ -165,7 +167,7 @@ public class IndexWriter {
         if (currentBlockSize > 0) {
             writeBlock();
         }
-        long remainingFiles = currentBlockId;
+        int remainingFiles = currentBlockId;
         int j=0;
         while (remainingFiles > 2) 
         { //merge files until only 2 are left
@@ -219,8 +221,8 @@ public class IndexWriter {
      */
     private void merge (File src1, File src2, File dst, boolean lastMerge) throws IOException {
         int currentTermGap = TERM_MAP_SIZE; //ensures that the first term is added to map with offset 0
-        long currentOffset = 0;
-        long bytesWritten = 0;
+        int currentOffset = 0;
+        int bytesWritten = 0;
         DataInputStream dis1=null ,dis2=null;
         DataOutputStream dos=null;
         IndexEntry e1=null, e2=null, entryOut=null;
@@ -256,11 +258,11 @@ public class IndexWriter {
                 e2 = IndexEntry.readEntry(dis2);
             }
             dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.delimiter));
-            dos.writeLong(entryOut.getPostingsSize());
+            dos.writeInt(entryOut.getPostingsSize());
             dos.write(entryOut.getRawPostingsData());
             if (lastMerge) { //if merging last two files, update termOffset and document modules
                 bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.delimiter)).length()*Character.BYTES+
-                                Long.BYTES + entryOut.getPostingsSize();
+                                Integer.BYTES + entryOut.getPostingsSize();
                 if (currentTermGap == TERM_MAP_SIZE) { //save term to map
                     termsoffset.put(entryOut.getTerm(), currentOffset);
                     currentTermGap = 0;
@@ -286,11 +288,11 @@ public class IndexWriter {
         while (entryOut != null) 
         {
             dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.delimiter));
-            dos.writeLong(entryOut.getPostingsSize());
+            dos.writeInt(entryOut.getPostingsSize());
             dos.write(entryOut.getRawPostingsData());
             if (lastMerge) { //if merging last two files, update termOffset and document modules
                 bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.delimiter)).length()*Character.BYTES+
-                                Long.BYTES + entryOut.getPostingsSize();
+                                Integer.BYTES + entryOut.getPostingsSize();
                 if (currentTermGap == TERM_MAP_SIZE) { //save term to map
                     termsoffset.put(entryOut.getTerm(), currentOffset);
                     currentTermGap = 0;
@@ -329,13 +331,13 @@ public class IndexWriter {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
         for (String term : termmap.keySet()) {
             List<Posting> lp = termmap.get(term);
-            long size = 0;
+            int size = 0;
             for (Posting p: lp) 
             {
                 size += p.positionsToBytesSize();
             }
             dos.writeChars(term + Character.toString(IndexEntry.delimiter));
-            dos.writeLong(size);
+            dos.writeInt(size);
             for (Posting p: lp)
             {
                 dos.write(p.positionsToBytes());
@@ -362,7 +364,7 @@ public class IndexWriter {
             docMod = new double[(int)currentDocId];
         }
         
-        long docNoAppearance = lp.size();
+        int docNoAppearance = lp.size();
         for (Posting p: lp) {
             double tf = (1 + Math.log(p.getTermFrequency())/Math.log(2));
             double idf = (currentDocId*1.0) / docNoAppearance;
@@ -370,13 +372,12 @@ public class IndexWriter {
         }
     }
     
+    //TODO REMOVE
+    private Pattern filter = Pattern.compile("[^\\p{ASCII}]"); 
     /**
      * Basic filtering, remove accents and symbols
      */
     private String basicFilter (String s) {
-        String convertedString = Normalizer
-                .normalize(s, Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", " ");
-        return convertedString;
+        return filter.matcher(s).replaceAll(" ");
     }
 }

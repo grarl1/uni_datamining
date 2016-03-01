@@ -66,7 +66,7 @@ public class BasicIndex implements Index {
         System.out.println("Indexing documents from '" + inputCollectionPath + "', this may take a while...");
 
         // Create writer.
-        IndexWriter writer = new IndexWriter(outputIndexPath);
+        IndexWriter writer = new IndexWriter(outputIndexPath, 10000000);
         // Start indexing.
         indexDocuments(writer, new File(inputCollectionPath), textParser);
 

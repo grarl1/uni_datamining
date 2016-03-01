@@ -39,7 +39,7 @@ public class IndexEntry {
     /* String representing the term */
     private String term;
     /* size in bytes of the data structure written for Postings */
-    private long postingsSize;
+    private int postingsSize;
     /* portion of the Entry that holds the list of postings for each docid */
     private byte[] rawPostingsData;
     
@@ -50,7 +50,7 @@ public class IndexEntry {
      * @param rawPostingsData raw data for postings, represents a stream of bytes </br>
      *              with following format: docid1,#postings1,position1,..positionN,docid2,#postings2,...
      */
-    public IndexEntry(String term, long postingsSize, byte[] rawPostingsData){
+    public IndexEntry(String term, int postingsSize, byte[] rawPostingsData){
         this.term = term;
         this.postingsSize = postingsSize;
         this.rawPostingsData = rawPostingsData;
@@ -70,7 +70,7 @@ public class IndexEntry {
      *
      * @return the postingsSize.
      */
-    public long getPostingsSize() {
+    public int getPostingsSize() {
         return postingsSize;
     }
 
@@ -101,7 +101,7 @@ public class IndexEntry {
                 term += Character.toString(read);
             }
             //read size of postings list
-            long postingsSize = dis.readLong();
+            int postingsSize = dis.readInt();
             byte[] postingList = new byte[(int)postingsSize];
             int amountRead = dis.read(postingList,0,(int)postingsSize);
             if (amountRead != (int)postingsSize) 
@@ -133,7 +133,7 @@ public class IndexEntry {
         if (e1 == null) return e2;
         if (e2 == null) return e1;
         
-        long newSize = e1.getPostingsSize()+e2.getPostingsSize();
+        int newSize = e1.getPostingsSize()+e2.getPostingsSize();
         byte[] newPosting = new byte[(int)newSize];
         System.arraycopy(e1.getRawPostingsData(), 0, newPosting, 0, (int)e1.getPostingsSize());
         System.arraycopy(e2.getRawPostingsData(), 0, newPosting, (int)e1.getPostingsSize(), (int)e2.getPostingsSize());
