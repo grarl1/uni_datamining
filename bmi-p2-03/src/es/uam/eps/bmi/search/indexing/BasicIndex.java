@@ -113,4 +113,14 @@ public class BasicIndex implements Index {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * Returns the module of the document with the given doc ID.
+     *
+     * @param docID ID of the document whose module will be returned.
+     * @return the module of the document with the given doc ID.
+     */
+    @Override
+    public double getDocModule(int docID) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
