@@ -57,7 +57,7 @@ public interface Index {
      *
      * @return a list of the IDs of indexed documents.
      */
-    public List<String> getDocIds();
+    public List<Integer> getDocIds();
 
     /**
      * Returns a document given its Id.
@@ -65,7 +65,7 @@ public interface Index {
      * @param docId Id of the document to retrieve.
      * @return a <code>TextDocument</code> instance matching the given Id.
      */
-    public TextDocument getDocument(String docId);
+    public TextDocument getDocument(Integer docId);
 
     /**
      * Returns the list of terms extracted from the indexed documents.

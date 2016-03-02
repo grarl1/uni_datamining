@@ -25,7 +25,7 @@ package es.uam.eps.bmi.search;
 public class TextDocument {
 
     /*Id of the document*/
-    private final String id;
+    private final Integer id;
 
     /*Absolute path of the document*/
     private final String name;
@@ -36,7 +36,7 @@ public class TextDocument {
      * @param id Unique ID for the text document.
      * @param name Text document absolute path.
      */
-    public TextDocument(String id, String name) {
+    public TextDocument(Integer id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -46,7 +46,7 @@ public class TextDocument {
      *
      * @return the id of the text document.
      */
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 

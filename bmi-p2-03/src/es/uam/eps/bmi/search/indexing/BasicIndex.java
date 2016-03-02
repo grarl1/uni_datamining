@@ -67,7 +67,7 @@ public class BasicIndex implements Index {
      * @return a list of the IDs of indexed documents.
      */
     @Override
-    public List<String> getDocIds() {
+    public List<Integer> getDocIds() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -78,7 +78,7 @@ public class BasicIndex implements Index {
      * @return a <code>TextDocument</code> instance matching the given Id.
      */
     @Override
-    public TextDocument getDocument(String docId) {
+    public TextDocument getDocument(Integer docId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
