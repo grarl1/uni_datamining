@@ -205,7 +205,7 @@ public class BasicIndex implements Index {
     }
 
     /**
-     * <<<<<<< HEAD Indexes the given file using the given writer.
+     * Indexes the given file using the given writer.
      *
      * @param writer Writer to the path where the index will be stored.
      * @param file The file or directory whose documents will be index.
