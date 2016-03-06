@@ -119,7 +119,7 @@ public class IndexWriter {
     public void add(String docName, String content) throws IOException {
         add(docName, content.split("\\s+"));
     }
-    
+
     /**
      * Adds document passed to the index.</br>
      *
@@ -132,10 +132,12 @@ public class IndexWriter {
             return;
         }
         for (String term : content) {
-            if (term.length() == 0) continue; //avoid empty strings
-            if (term.compareTo("Tree") == 0){
+            if (term.length() == 0) {
+                continue; //avoid empty strings
+            }
+            if (term.compareTo("Tree") == 0) {
                 System.out.println();
-        }
+            }
             List<Posting> lp;
             if (termmap.containsKey(term)) { //get term list of postings and add this position
                 lp = termmap.get(term);
@@ -197,7 +199,7 @@ public class IndexWriter {
             remainingFiles = remainingFiles / 2 + remainingFiles % 2;
         }
         execServ.shutdown();
-        
+
         //merge last two files updating document modules and termOffset
         String name_f1 = indexPath + String.format(TMP_FILE_FORMAT, j, 0);
         File f1 = new File(name_f1);

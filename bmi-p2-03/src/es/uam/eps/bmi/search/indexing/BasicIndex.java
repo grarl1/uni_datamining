@@ -17,6 +17,7 @@
 package es.uam.eps.bmi.search.indexing;
 
 import es.uam.eps.bmi.search.TextDocument;
+import es.uam.eps.bmi.search.parsing.BasicParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import java.io.File;
 import java.io.FileInputStream;
@@ -331,7 +332,7 @@ public class BasicIndex implements Index {
 
         // Build the index
         BasicIndex basicIndex = new BasicIndex();
-        //basicIndex.build(args[0], args[1], new BasicParser());
+        basicIndex.build(args[0], args[1], new BasicParser());
 
         System.out.print("Getting index stats...");
         basicIndex.load(args[1]);
