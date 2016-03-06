@@ -17,8 +17,6 @@
 package es.uam.eps.bmi.search.indexing;
 
 import es.uam.eps.bmi.search.TextDocument;
-import es.uam.eps.bmi.search.parsing.BasicParser;
-import es.uam.eps.bmi.search.parsing.StemParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,10 +37,10 @@ import java.util.zip.ZipInputStream;
 public class BasicIndex implements Index {
 
     /* Attributes */
-    private String indexPath; // Path where the index is stored
-    private IndexWriter writer = null;
-    private IndexReader reader = null;
-    
+    protected String indexPath; // Path where the index is stored
+    protected IndexWriter writer = null;
+    protected IndexReader reader = null;
+
     /**
      * Builds an index from a collection of text documents.
      *
@@ -74,13 +72,12 @@ public class BasicIndex implements Index {
 
         try {
             writer.close();
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
             System.err.println(ex.getMessage());
             return;
         }
-        
+
         // Stop timing and print elapsed time.
         Date end = new Date();
         System.out.println(end.getTime() - start.getTime() + " total milliseconds");
@@ -102,8 +99,7 @@ public class BasicIndex implements Index {
                 System.err.println(ex.getMessage());
                 return;
             }
-        }
-        else {
+        } else {
             try {
                 reader = new IndexReader(indexPath);
             } catch (IOException ex) {
@@ -116,7 +112,7 @@ public class BasicIndex implements Index {
                 return;
             }
         }
-        
+
         writer = null;
     }
 
@@ -191,10 +187,9 @@ public class BasicIndex implements Index {
      */
     @Override
     public boolean isLoaded() {
-        if (reader == null)
-            {
+        if (reader == null) {
             return false;
-            }
+        }
         return true;
     }
 
@@ -206,10 +201,11 @@ public class BasicIndex implements Index {
      * @return the module of the document corresponding to the id passed as
      * argument.
      */
+    @Override
     public double getDocModule(int docId) {
         return reader.getDocModule(docId);
     }
-    
+
     /**
      * Indexes the given file using the given writer.
      *
@@ -235,12 +231,11 @@ public class BasicIndex implements Index {
                     }
                 }
             } // The file object represents a file (not a directory).
-            else {
-                // Test if file is a zip.
-                if ( isZipFile(file) ) { 
+            else // Test if file is a zip.
+            {
+                if (isZipFile(file)) {
                     indexZip(writer, file, textParser);
-                }
-                else {
+                } else {
                     try (FileInputStream fis = new FileInputStream(file)) {
                         String docname = file.getPath();
                         // Read the whole content from file.
@@ -257,10 +252,10 @@ public class BasicIndex implements Index {
             }
         }
     }
-    
+
     /**
-     * Indexes every file inside zip file passed.
-     * Behavior undefined for zip files containing folders.
+     * Indexes every file inside zip file passed. Behavior undefined for zip
+     * files containing folders.
      *
      * @param writer Writer to the path where the index will be stored.
      * @param zipfile Zip file reading.
@@ -272,10 +267,10 @@ public class BasicIndex implements Index {
         ZipEntry ze;
         try (FileInputStream fis = new FileInputStream(zipFile);
                 ZipInputStream zis = new ZipInputStream(fis)) {
-        //Iterate over every file inside zip.
-            while ( (ze = zis.getNextEntry()) != null ) {
+            //Iterate over every file inside zip.
+            while ((ze = zis.getNextEntry()) != null) {
 
-                String docname = zipFile.getPath()+"/"+ze.getName();
+                String docname = zipFile.getPath() + "/" + ze.getName();
 
                 // read file
                 byte[] byteContent = new byte[2048];
@@ -295,17 +290,17 @@ public class BasicIndex implements Index {
             System.err.println(ex.getMessage());
         }
     }
-    
+
     /**
      * Returns true if file passed is a zip file, false otherwise.
-     * 
+     *
      * @param file file to test
      * @return true if file passed is a zip file, false otherwise.
      */
     private boolean isZipFile(File file) {
         try (FileInputStream fis = new FileInputStream(file);
                 ZipInputStream zis = new ZipInputStream(fis)) {
-            if (zis.getNextEntry() != null){
+            if (zis.getNextEntry() != null) {
                 return true;
             }
         } catch (IOException ex) {
@@ -314,8 +309,7 @@ public class BasicIndex implements Index {
         }
         return false;
     }
-    
-    
+
     /**
      * Main class for Basic index.
      *
@@ -334,15 +328,15 @@ public class BasicIndex implements Index {
                     BasicIndex.class.getSimpleName());
             return;
         }
-        
+
         // Build the index
         BasicIndex basicIndex = new BasicIndex();
-        basicIndex.build(args[0], args[1], new BasicParser());
+        //basicIndex.build(args[0], args[1], new BasicParser());
 
         System.out.print("Getting index stats...");
         basicIndex.load(args[1]);
         int totalDocuments = basicIndex.getDocIds().size();
-        
+
         File f = new File(args[1] + "/" + "indexstats");
         try (FileWriter fw = new FileWriter(f, false)) {
             // Get stats from index and write them to the file.
@@ -351,7 +345,7 @@ public class BasicIndex implements Index {
                 long frequency = 0;
                 long nDocs = 0;
                 List<Posting> lp = basicIndex.getTermPostings(term);
-                for (Posting p: lp) {
+                for (Posting p : lp) {
                     frequency += p.getTermFrequency();
                     nDocs++;
                 }
@@ -365,7 +359,6 @@ public class BasicIndex implements Index {
             System.err.println(ex.getMessage());
         }
         System.out.println("Done");
-        
-        
+
     }
 }

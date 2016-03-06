@@ -100,6 +100,15 @@ public class IndexReader {
     }
 
     /**
+     * Returns a list of document id's in the index.
+     *
+     * @return a list of document id's in the index
+     */
+    List<Integer> getDocIds() {
+        return new ArrayList<Integer>(docsmap.keySet());
+    }
+
+    /**
      * Returns a <code>TextDocument</code> corresponding to id passed or null if
      * such document does not exist in index.
      *
@@ -158,8 +167,7 @@ public class IndexReader {
         }
         //find if term is after last read term but in the same block. In that
         //case, there is no need to move the reading pointer in the file.
-        if ((lastRead.compareTo(lowerBound.getKey()) < 0) || (lastRead.compareTo(term) >= 0))
-        {
+        if ((lastRead.compareTo(lowerBound.getKey()) < 0) || (lastRead.compareTo(term) >= 0)) {
             raf.seek(lowerBound.getValue());
             lastReadOffset = 0;
         }
@@ -177,15 +185,8 @@ public class IndexReader {
             }
         }
         lastRead = "";
-        lastReadOffset=0;
+        lastReadOffset = 0;
         return null;
     }
 
-    /**
-     *
-     * @return
-     */
-    List<Integer> getDocIds() {
-        return new ArrayList<Integer>(docsmap.keySet());
-    }
 }

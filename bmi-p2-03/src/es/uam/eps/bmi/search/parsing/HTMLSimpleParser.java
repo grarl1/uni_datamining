@@ -38,8 +38,8 @@ public class HTMLSimpleParser implements TextParser {
     }
 
     /**
-     * Processes the input text removing the HTML tags.
-     * Splits text after parsing into tokens.
+     * Processes the input text removing the HTML tags. Splits text after
+     * parsing into tokens.
      *
      * @param text Text to be processed.
      * @return the processed input text without HTML tags.
@@ -48,5 +48,5 @@ public class HTMLSimpleParser implements TextParser {
     public String[] parse(String text, String splitter) {
         return Jsoup.parse(text).text().split(splitter);
     }
-    
+
 }

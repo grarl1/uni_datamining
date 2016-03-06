@@ -18,10 +18,8 @@ package es.uam.eps.bmi.search.parsing;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.tartarus.snowball.SnowballStemmer;
-import org.tartarus.snowball.SnowballStemmer;
+import org.tartarus.snowball.ext.englishStemmer;
 
 /**
  * Class for parsing documents.
@@ -31,6 +29,31 @@ import org.tartarus.snowball.SnowballStemmer;
  * @author Guillermo Ruiz Álvarez
  */
 public class StemParser extends StopwordParser {
+
+    /* english Stemmer */
+    private SnowballStemmer stemmer;
+    /* number of times to stem each term */
+    private int times;
+
+    /**
+     * Default constructor. Performs one pass to the text using by default an
+     * english language stemmer.
+     */
+    public StemParser() {
+        this.times = 1;
+        this.stemmer = new englishStemmer();
+    }
+
+    /**
+     * Constructor receiving times variable and stemmer to use.
+     *
+     * @param times number of times to stem each term.
+     * @param stemmer stemmer to use.
+     */
+    public StemParser(int times, SnowballStemmer stemmer) {
+        this.times = times;
+        this.stemmer = stemmer;
+    }
 
     /**
      * Processes the input text removing the HTML tags and every non letter
@@ -43,16 +66,16 @@ public class StemParser extends StopwordParser {
     public String parse(String text) {
         String parsed = "";
         String[] terms = super.parse(text, "\\s+");
-        for (String s : terms){
-            //TODO
+        for (String s : terms) {
+            stemmer.setCurrent(s);
+            stemmer.stem();
         }
         return parsed;
     }
-    
+
     /**
      * Processes the input text removing the HTML tags and every non letter
-     * character.
-     * Splits text after parsing into tokens.
+     * character. Splits text after parsing into tokens.
      *
      * @param text Text to be processed.
      * @param splitter string to split text with
@@ -61,24 +84,13 @@ public class StemParser extends StopwordParser {
     @Override
     public String[] parse(String text, String splitter) {
         Class stemClass;
-        try {
-            stemClass = Class.forName("org.tartarus.snowball.ext.englishStemmer");
-            SnowballStemmer stemmer = (SnowballStemmer) stemClass.newInstance();
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(StemParser.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            Logger.getLogger(StemParser.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            Logger.getLogger(StemParser.class.getName()).log(Level.SEVERE, null, ex);
-        }
         List<String> filtered = new ArrayList<>();
         String[] terms = super.parse(text, splitter);
-        for (String s : terms){
-            
+        for (String s : terms) {
+
             //TODO SOMETHING
         }
         return filtered.toArray(new String[0]);
     }
 
 }
-
