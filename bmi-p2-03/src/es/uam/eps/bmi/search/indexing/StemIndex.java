@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import org.tartarus.snowball.ext.englishStemmer;
 
 /**
  * Stem index class. Filters stopwords preventing them from getting being
@@ -54,7 +55,7 @@ public class StemIndex extends BasicIndex {
 
         // Build the index
         StemIndex stopwordIndex = new StemIndex();
-        stopwordIndex.build(args[0], args[1], new StemParser());
+        stopwordIndex.build(args[0], args[1], new StemParser(2, new englishStemmer()));
 
         System.out.print("Getting index stats...");
         stopwordIndex.load(args[1]);
