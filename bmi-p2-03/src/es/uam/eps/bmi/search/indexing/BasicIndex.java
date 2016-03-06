@@ -207,7 +207,7 @@ public class BasicIndex implements Index {
      * argument.
      */
     public double getDocModule(int docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return reader.getDocModule(docId);
     }
     
     /**
@@ -334,7 +334,7 @@ public class BasicIndex implements Index {
                     BasicIndex.class.getSimpleName());
             return;
         }
-
+        
         // Build the index
         BasicIndex basicIndex = new BasicIndex();
         basicIndex.build(args[0], args[1], new BasicParser());
