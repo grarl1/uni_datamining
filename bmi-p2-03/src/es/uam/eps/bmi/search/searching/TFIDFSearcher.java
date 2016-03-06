@@ -41,7 +41,7 @@ import java.util.concurrent.Future;
  * @author Guillermo Ruiz Álvarez
  */
 public class TFIDFSearcher implements Searcher {
-    
+
     //Index used to search
     private Index index;
     // Cores
@@ -77,6 +77,11 @@ public class TFIDFSearcher implements Searcher {
         // Separate the query string by spaces
         String[] terms = query.split(" ");
 
+        // If no terms, return an empty string.
+        if (terms.length == 0) {
+            return new ArrayList<>();
+        }
+
         // Number of documents
         int docsCount = index.getDocIds().size();
 
@@ -90,8 +95,8 @@ public class TFIDFSearcher implements Searcher {
             Callable<Map<Integer, ScoredTextDocument>> callable = () -> {
                 // Map to store the documents.
                 HashMap<Integer, ScoredTextDocument> docMap = new HashMap<>();
-                
-                // Get the 
+
+                // Get the number of documents in which this term appears.
                 int termDocsCount = termPosting.size();
 
                 // Iterate the term postings
@@ -181,8 +186,7 @@ public class TFIDFSearcher implements Searcher {
         Collections.sort(resultList, Collections.reverseOrder());
         return resultList;
     }
-    
-    
+
     /**
      * Main class for TF-IDF searcher.
      *
@@ -194,7 +198,7 @@ public class TFIDFSearcher implements Searcher {
      */
     public static void main(String[] args) {
         int TOP = 5;
-        
+
         // Input control
         if (args.length != 1) {
             System.err.printf("Usage: %s index_path\n"
