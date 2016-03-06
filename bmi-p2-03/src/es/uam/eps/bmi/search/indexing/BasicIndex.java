@@ -17,13 +17,15 @@
 package es.uam.eps.bmi.search.indexing;
 
 import es.uam.eps.bmi.search.TextDocument;
-import es.uam.eps.bmi.search.parsing.HTMLSimpleParser;
+import es.uam.eps.bmi.search.parsing.BasicParser;
+import es.uam.eps.bmi.search.parsing.StemParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -37,9 +39,9 @@ import java.util.zip.ZipInputStream;
 public class BasicIndex implements Index {
 
     /* Attributes */
-    private String indexPath; // Path where the index is indexed
-    private IndexWriter reader = null; //TODO change for IndexReader    
-    private HashMap<String, Integer> namesMap = null; //TODO remove if not needed
+    private String indexPath; // Path where the index is stored
+    private IndexWriter writer = null;
+    private IndexReader reader = null;
     
     /**
      * Builds an index from a collection of text documents.
@@ -66,15 +68,23 @@ public class BasicIndex implements Index {
         System.out.println("Indexing documents from '" + inputCollectionPath + "', this may take a while...");
 
         // Create writer.
-        IndexWriter writer = new IndexWriter(outputIndexPath, 10000000);
+        writer = new IndexWriter(outputIndexPath, 10000000);
         // Start indexing.
         indexDocuments(writer, new File(inputCollectionPath), textParser);
 
+        try {
+            writer.close();
+        }
+        catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        }
+        
         // Stop timing and print elapsed time.
         Date end = new Date();
         System.out.println(end.getTime() - start.getTime() + " total milliseconds");
         reader = null;
-        namesMap = null;
     }
 
     /**
@@ -84,7 +94,30 @@ public class BasicIndex implements Index {
      */
     @Override
     public void load(String indexPath) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (writer != null) { //writer already in RAM, build reader from its data.
+            try {
+                reader = new IndexReader(writer);
+            } catch (FileNotFoundException ex) {
+                System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+                return;
+            }
+        }
+        else {
+            try {
+                reader = new IndexReader(indexPath);
+            } catch (IOException ex) {
+                System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+                return;
+            } catch (ClassNotFoundException ex) {
+                System.err.println("Exception reading class from file: " + ex.getClass().getSimpleName());
+                System.err.println(ex.getMessage());
+                return;
+            }
+        }
+        
+        writer = null;
     }
 
     /**
@@ -94,7 +127,7 @@ public class BasicIndex implements Index {
      */
     @Override
     public String getPath() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return indexPath;
     }
 
     /**
@@ -103,8 +136,8 @@ public class BasicIndex implements Index {
      * @return a list of the IDs of indexed documents.
      */
     @Override
-    public List<String> getDocIds() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Integer> getDocIds() {
+        return reader.getDocIds();
     }
 
     /**
@@ -114,8 +147,8 @@ public class BasicIndex implements Index {
      * @return a <code>TextDocument</code> instance matching the given Id.
      */
     @Override
-    public TextDocument getDocument(String docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public TextDocument getDocument(int docId) {
+        return reader.getDocument(docId);
     }
 
     /**
@@ -125,7 +158,13 @@ public class BasicIndex implements Index {
      */
     @Override
     public List<String> getTerms() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            return reader.getTerms();
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -136,7 +175,13 @@ public class BasicIndex implements Index {
      */
     @Override
     public List<Posting> getTermPostings(String term) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            return reader.getTermPostings(term);
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -146,9 +191,25 @@ public class BasicIndex implements Index {
      */
     @Override
     public boolean isLoaded() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (reader == null)
+            {
+            return false;
+            }
+        return true;
     }
 
+    /**
+     * Returns the module of the document corresponding to the id passed as
+     * argument
+     *
+     * @param docId numeric id of the document to retrieve it's module.
+     * @return the module of the document corresponding to the id passed as
+     * argument.
+     */
+    public double getDocModule(int docId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     /**
      * Indexes the given file using the given writer.
      *
@@ -186,7 +247,7 @@ public class BasicIndex implements Index {
                         byte[] byteContent = new byte[(int) file.length()];
                         fis.read(byteContent);
                         //Add document to the index
-                        writer.add(docname, textParser.parse(new String(byteContent)));
+                        writer.add(docname, textParser.parse(new String(byteContent), "\\s+"));
 
                     } catch (IOException ex) {
                         System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
@@ -194,13 +255,6 @@ public class BasicIndex implements Index {
                     }
                 }
             }
-        }
-        try {
-            writer.close();
-        }
-        catch (IOException ex) {
-            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
-            System.err.println(ex.getMessage());
         }
     }
     
@@ -231,7 +285,9 @@ public class BasicIndex implements Index {
                     s += new String(byteContent, 0, justRead);
                 }
                 //add document to the index
+                Date st = new Date();
                 writer.add(docname, textParser.parse(s));
+                Date end = new Date();
 
             }
         } catch (IOException ex) {
@@ -281,6 +337,35 @@ public class BasicIndex implements Index {
 
         // Build the index
         BasicIndex basicIndex = new BasicIndex();
-        basicIndex.build(args[0], args[1], new HTMLSimpleParser());
+        basicIndex.build(args[0], args[1], new BasicParser());
+
+        System.out.print("Getting index stats...");
+        basicIndex.load(args[1]);
+        int totalDocuments = basicIndex.getDocIds().size();
+        
+        File f = new File(args[1] + "/" + "indexstats");
+        try (FileWriter fw = new FileWriter(f, false)) {
+            // Get stats from index and write them to the file.
+            List<String> terms = basicIndex.getTerms();
+            for (String term : terms) {
+                long frequency = 0;
+                long nDocs = 0;
+                List<Posting> lp = basicIndex.getTermPostings(term);
+                for (Posting p: lp) {
+                    frequency += p.getTermFrequency();
+                    nDocs++;
+                }
+                double tf = 1 + (Math.log(frequency) / Math.log(2));
+                double idf = Math.log(totalDocuments / nDocs);
+                String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, nDocs, tf, idf);
+                fw.write(outputString);
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        System.out.println("Done");
+        
+        
     }
 }

@@ -16,10 +16,9 @@
  */
 package es.uam.eps.bmi.search.indexing;
 
-import java.io.DataInputStream;
+import java.io.DataInput;
 import java.io.EOFException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * IndexEntry class.
@@ -93,7 +92,7 @@ public class IndexEntry {
      * @param dis input stream to read from.
      * @return IndexEntry with term read.
      */
-    public static IndexEntry readEntry(DataInputStream dis) throws IOException {
+    public static IndexEntry readEntry(DataInput dis) throws IOException {
         String term = "";
         try {
             char read;
@@ -103,11 +102,7 @@ public class IndexEntry {
             //read size of postings list
             int postingsSize = dis.readInt();
             byte[] postingList = new byte[(int)postingsSize];
-            int amountRead = dis.read(postingList,0,(int)postingsSize);
-            if (amountRead != (int)postingsSize) 
-            {
-                throw new IOException();
-            }
+            dis.readFully(postingList,0,(int)postingsSize);
             return new IndexEntry(term, postingsSize, postingList);
         }
         catch (EOFException ex) {

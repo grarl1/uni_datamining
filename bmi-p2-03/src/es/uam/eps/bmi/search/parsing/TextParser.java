@@ -31,4 +31,14 @@ public interface TextParser {
      * @return the processed input text.
      */
     public String parse(String text);
+    
+    /**
+     * Returns the processed input text as strings separated by the String passed
+     * as argument.
+     *
+     * @param text Text to be processed.
+     * @param splitter string to split text with
+     * @return the processed input text.
+     */
+    public String[] parse(String text, String splitter);
 }

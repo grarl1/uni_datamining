@@ -158,6 +158,7 @@ public class Posting {
                 p.addPosition(lb.get());
                 i++;
             }
+            lp.add(p);
         }
         return lp;
      }
