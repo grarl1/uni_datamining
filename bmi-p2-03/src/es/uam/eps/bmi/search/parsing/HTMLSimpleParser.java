@@ -48,5 +48,4 @@ public class HTMLSimpleParser implements TextParser {
     public String[] parse(String text, String splitter) {
         return Jsoup.parse(text).text().split(splitter);
     }
-
 }

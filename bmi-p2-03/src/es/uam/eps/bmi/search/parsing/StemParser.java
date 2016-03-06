@@ -31,13 +31,13 @@ import org.tartarus.snowball.ext.englishStemmer;
 public class StemParser extends StopwordParser {
 
     /* english Stemmer */
-    private SnowballStemmer stemmer;
+    private final SnowballStemmer stemmer;
     /* number of times to stem each term */
-    private int times;
+    private final int times;
 
     /**
      * Default constructor. Performs one pass to the text using by default an
-     * english language stemmer.
+     * English language stemmer.
      */
     public StemParser() {
         this.times = 1;

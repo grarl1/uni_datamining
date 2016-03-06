@@ -188,10 +188,7 @@ public class BasicIndex implements Index {
      */
     @Override
     public boolean isLoaded() {
-        if (reader == null) {
-            return false;
-        }
-        return true;
+        return reader != null;
     }
 
     /**
@@ -208,7 +205,7 @@ public class BasicIndex implements Index {
     }
 
     /**
-     * Indexes the given file using the given writer.
+     * <<<<<<< HEAD Indexes the given file using the given writer.
      *
      * @param writer Writer to the path where the index will be stored.
      * @param file The file or directory whose documents will be index.
@@ -233,8 +230,7 @@ public class BasicIndex implements Index {
                 }
             } // The file object represents a file (not a directory).
             else // Test if file is a zip.
-            {
-                if (isZipFile(file)) {
+             if (isZipFile(file)) {
                     indexZip(writer, file, textParser);
                 } else {
                     try (FileInputStream fis = new FileInputStream(file)) {
@@ -250,7 +246,6 @@ public class BasicIndex implements Index {
                         System.err.println(ex.getMessage());
                     }
                 }
-            }
         }
     }
 
@@ -360,6 +355,5 @@ public class BasicIndex implements Index {
             System.err.println(ex.getMessage());
         }
         System.out.println("Done");
-
     }
 }
