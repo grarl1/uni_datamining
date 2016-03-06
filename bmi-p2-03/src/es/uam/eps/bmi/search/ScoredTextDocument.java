@@ -25,8 +25,8 @@ package es.uam.eps.bmi.search;
 public class ScoredTextDocument implements Comparable {
 
     /* Attributes */
-    private final String docID;
-    private final double score;
+    private final int docID;
+    private double score;
 
     /**
      * Default constructor for <code>ScoredTextDocument</code> class.
@@ -34,7 +34,7 @@ public class ScoredTextDocument implements Comparable {
      * @param docID Unique ID for the text document.
      * @param score Score of the text document.
      */
-    public ScoredTextDocument(String docID, double score) {
+    public ScoredTextDocument(int docID, double score) {
         this.docID = docID;
         this.score = score;
     }
@@ -44,7 +44,7 @@ public class ScoredTextDocument implements Comparable {
      *
      * @return the document id.
      */
-    public String getDocID() {
+    public int getDocID() {
         return docID;
     }
 
@@ -55,6 +55,15 @@ public class ScoredTextDocument implements Comparable {
      */
     public double getScore() {
         return score;
+    }
+
+    /**
+     * Sum the given value to the current score value.
+     *
+     * @param score Value to sum to the current value.
+     */
+    public void sumScore(double score) {
+        this.score += score;
     }
 
     /**

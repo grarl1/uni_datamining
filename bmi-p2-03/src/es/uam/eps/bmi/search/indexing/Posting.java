@@ -39,7 +39,7 @@ public class Posting {
     private final int docID;
 
     /*Position of the term within the document*/
-    private List<Integer> termPositions;
+    private final List<Integer> termPositions;
 
     /*Amount of times the term appears in the document*/
     private int termFrequency;
@@ -107,7 +107,7 @@ public class Posting {
     }
 
     /**
-     * Returns an array of bytes with postings information as follows: </br>
+     * Returns an array of bytes with postings information as follows: <br>
      * #docID,#positions,position1,position2,...,positionN
      *
      * @throws java.io.IOException
@@ -115,14 +115,14 @@ public class Posting {
      */
     public byte[] positionsToBytes() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeInt(docID);
-        dos.writeInt(termFrequency);
-        for (int l : termPositions) {
-            dos.writeInt(l);
+        try (DataOutputStream dos = new DataOutputStream(baos)) {
+            dos.writeInt(docID);
+            dos.writeInt(termFrequency);
+            for (int l : termPositions) {
+                dos.writeInt(l);
+            }
+            dos.flush();
         }
-        dos.flush();
-        dos.close();
         return baos.toByteArray();
     }
 
@@ -151,6 +151,7 @@ public class Posting {
             return null;
         }
         IntBuffer lb = ByteBuffer.wrap(array).asIntBuffer();
+
         for (int i = 0; i < lb.limit();) {
             int docid = lb.get();
             int postingsSize = lb.get();

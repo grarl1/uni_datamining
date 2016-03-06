@@ -90,12 +90,11 @@ public interface Index {
     public boolean isLoaded();
 
     /**
-     * Returns the module of the document corresponding to the id passed as
-     * argument
+     * Returns the module of the document with the given doc ID.
      *
-     * @param docId id of the document.
-     * @return the module of the document corresponding to the id passed as
-     * argument.
+     * @param docID ID of the document whose module will be returned.
+     * @return the module of the document with the given doc ID.
      */
-    public double getDocModule(int docId);
+    public double getDocModule(int docID);
+
 }
