@@ -37,6 +37,6 @@ for ((i=0; i<${#Y_LABEL[@]}; ++i)); do
 done
 
 #comment following line to keep sorted file
-#rm $SORTED
+rm $SORTED
 
  

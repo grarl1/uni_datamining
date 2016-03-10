@@ -26,7 +26,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
- * IndexBuilder class
+ * IndexBuilder class.
+ * Wraps calls to build every index for this assignment.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez

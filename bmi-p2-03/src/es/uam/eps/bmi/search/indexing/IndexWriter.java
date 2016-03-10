@@ -33,6 +33,9 @@ import java.util.concurrent.Future;
 
 /**
  * IndexWriter class.
+ * Main builder for indexes, adds documents to the index writing to disc when
+ * needed to avoid RAM overload. It also merges every subindex built in the process
+ * to the final index.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez
@@ -134,9 +137,6 @@ public class IndexWriter {
         for (String term : content) {
             if (term.length() == 0) {
                 continue; //avoid empty strings
-            }
-            if (term.compareTo("Tree") == 0) {
-                System.out.println();
             }
             List<Posting> lp;
             if (termmap.containsKey(term)) { //get term list of postings and add this position
@@ -375,8 +375,8 @@ public class IndexWriter {
 
         int docNoAppearance = lp.size();
         for (Posting p : lp) {
-            double tf = (1 + Math.log(p.getTermFrequency()) / Math.log(2));
-            double idf = (currentDocId * 1.0) / docNoAppearance;
+            double tf = 1 + (Math.log(p.getTermFrequency()) / Math.log(2));
+            double idf = Math.log((currentDocId * 1.0) / docNoAppearance) / Math.log(2);
             docMod[(int) p.getDocID()] += Math.pow(tf, 2) * Math.pow(idf, 2);
         }
     }

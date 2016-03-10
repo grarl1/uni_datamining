@@ -59,7 +59,7 @@ public class IndexReader {
     protected TreeMap<String, Integer> termsoffset;
 
     /* File to read index from */
-    private RandomAccessFile raf;
+    private final RandomAccessFile raf;
 
     /* Indicates the number of terms gap in termMapFile so that
         only 1 of every termMapSize terms will be written to termMapFile file */
@@ -72,6 +72,10 @@ public class IndexReader {
 
     /**
      * Default constructor.
+     * @param indexPath path to index in disc.
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     * @throws java.lang.ClassNotFoundException
      */
     public IndexReader(String indexPath) throws FileNotFoundException, IOException, ClassNotFoundException {
         this.indexPath = indexPath;
@@ -105,7 +109,7 @@ public class IndexReader {
      * @return a list of document id's in the index
      */
     List<Integer> getDocIds() {
-        return new ArrayList<Integer>(docsmap.keySet());
+        return new ArrayList<>(docsmap.keySet());
     }
 
     /**
@@ -138,6 +142,7 @@ public class IndexReader {
     /**
      * Returns a list of terms in the index.
      *
+     * @return List of terms in the index
      * @throws java.io.IOException
      */
     public List<String> getTerms() throws IOException {
