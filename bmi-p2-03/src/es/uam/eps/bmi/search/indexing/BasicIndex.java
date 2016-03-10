@@ -346,7 +346,7 @@ public class BasicIndex implements Index {
                     nDocs++;
                 }
                 double tf = 1 + (Math.log(frequency) / Math.log(2));
-                double idf = Math.log(totalDocuments / nDocs);
+                double idf = Math.log(totalDocuments / nDocs) / Math.log(2) ;
                 String outputString = String.format("%s %d %d %.2f %.2f\n", term, frequency, nDocs, tf, idf);
                 fw.write(outputString);
             }
