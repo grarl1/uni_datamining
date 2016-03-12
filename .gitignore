@@ -13,3 +13,10 @@ manifest.mf
 /bmi-p2-03/zips/
 /bmi-p2-03/out/
 /build/
+
+# Latex Aux
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
