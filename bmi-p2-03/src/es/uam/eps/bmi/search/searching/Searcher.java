@@ -42,4 +42,11 @@ public interface Searcher {
      * @return a ranking of documents sorted by the decrementing score value.
      */
     public List<ScoredTextDocument> search(String query);
+
+    /**
+     * Sets the maximum number of results to retrieve.
+     *
+     * @param topResultsNumber Maximum number of results to retrieve.
+     */
+    public void setTopResultsNumber(int topResultsNumber);
 }

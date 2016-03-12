@@ -35,6 +35,9 @@ import java.util.Scanner;
  */
 public class LiteralMatchingSearcher implements Searcher {
 
+    // Maximum number of results to retrieve.
+    int TOP_RESULTS_NUMBER = 5;
+
     //Index used to search
     private Index index;
 
@@ -158,6 +161,17 @@ public class LiteralMatchingSearcher implements Searcher {
     }
     
     
+    /**
+     * Sets the maximum number of results to retrieve.
+     *
+     * @param topResultsNumber Maximum number of results to retrieve.
+     */
+    @Override
+    public void setTopResultsNumber(int topResultsNumber) {
+        this.TOP_RESULTS_NUMBER = topResultsNumber;
+    }
+    
+
     /**
      * Main class for TF-IDF searcher.
      *

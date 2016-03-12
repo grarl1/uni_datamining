@@ -58,12 +58,12 @@ public class ScoredTextDocument implements Comparable {
     }
 
     /**
-     * Sum the given value to the current score value.
+     * Sets the given value to the current score value.
      *
-     * @param score Value to sum to the current value.
+     * @param score Value to set to the current value.
      */
-    public void sumScore(double score) {
-        this.score += score;
+    public void setScore(double score) {
+        this.score = score;
     }
 
     /**

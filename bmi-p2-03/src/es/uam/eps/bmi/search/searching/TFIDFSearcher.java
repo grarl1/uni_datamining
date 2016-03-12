@@ -21,17 +21,13 @@ import es.uam.eps.bmi.search.TextDocument;
 import es.uam.eps.bmi.search.indexing.BasicIndex;
 import es.uam.eps.bmi.search.indexing.Index;
 import es.uam.eps.bmi.search.indexing.Posting;
+import es.uam.eps.bmi.util.MinHeap;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Class implementing an information retrieval vector model with TF-IDF terms
@@ -42,10 +38,14 @@ import java.util.concurrent.Future;
  */
 public class TFIDFSearcher implements Searcher {
 
+    // Maximum number of results to retrieve.
+    int TOP_RESULTS_NUMBER = 5;
+
     //Index used to search
     private Index index;
-    // Cores
-    private int cores;
+
+    // Attributes
+    private double docsCount = 0;
 
     /**
      * Creates a searcher using the given index.
@@ -56,9 +56,6 @@ public class TFIDFSearcher implements Searcher {
     public void build(Index index) {
         // Store the index object.
         this.index = index;
-
-        // Get the number of cores
-        this.cores = Runtime.getRuntime().availableProcessors();
     }
 
     /**
@@ -69,11 +66,6 @@ public class TFIDFSearcher implements Searcher {
      */
     @Override
     public List<ScoredTextDocument> search(String query) {
-
-        // Thread pool to perform a multi thread search.
-        ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(cores);
-        List<Callable<Map<Integer, ScoredTextDocument>>> callableList = new ArrayList<>();
-
         // Separate the query string by spaces
         String[] terms = query.split(" ");
 
@@ -82,109 +74,164 @@ public class TFIDFSearcher implements Searcher {
             return new ArrayList<>();
         }
 
-        // Number of documents
-        int docsCount = index.getDocIds().size();
+        // Heap to traverse the postings by docID.
+        PriorityQueue<ScoredTextDocument> heap = new PriorityQueue<>(terms.length, (ScoredTextDocument t1, ScoredTextDocument t2) -> Integer.compare(t1.getDocID(), t2.getDocID()));
+        // Min-Heap to store the results.
+        MinHeap<ScoredTextDocument> minHeap = new MinHeap<>(TOP_RESULTS_NUMBER);
 
-        // Iterate the query terms
+        // Attributes for calculation
+        docsCount = (double) index.getDocIds().size();
+
+        // Load term postings
+        int[] cosequentialIndexes = new int[terms.length];
+        List<List<Posting>> termsPostings = new ArrayList<>();
         for (String term : terms) {
-
-            // Get the list of postings.
-            List<Posting> termPosting = index.getTermPostings(term);
-
-            // Create a task for execution (one per term in the query)
-            Callable<Map<Integer, ScoredTextDocument>> callable = () -> {
-                // Map to store the documents.
-                HashMap<Integer, ScoredTextDocument> docMap = new HashMap<>();
-
-                // Get the number of documents in which this term appears.
-                int termDocsCount = termPosting.size();
-
-                // Iterate the term postings
-                termPosting.stream().forEach((posting) -> {
-                    // Get document attributes
-                    int docID = posting.getDocID();
-                    double docMod = index.getDocModule(docID);
-
-                    // Get term attributes
-                    int termFrequency = posting.getTermFrequency();
-
-                    // Compute the tf-idf
-                    double idf = Math.log((double) docsCount / (double) termDocsCount);
-                    double tf = 1 + Math.log(termFrequency);
-                    double tf_idf = tf * idf;
-
-                    // Compute the partial ranking
-                    double score = (1 / docMod) * tf_idf;
-
-                    // Store the ranking
-                    ScoredTextDocument std = docMap.get(docID);
-                    // If it does not exists, add to the map.
-                    if (std == null) {
-                        std = new ScoredTextDocument(docID, score);
-                        docMap.put(docID, std);
-                    } else {
-                        // Uptade the score.
-                        std.sumScore(score);
-                    }
-                });
-
-                return docMap;
-            };
-
-            // Add the future object to the list.
-            callableList.add(callable);
+            termsPostings.add(index.getTermPostings(term));
         }
 
-        // Wait for the threads to finish all the tasks.
-        try {
-            // Execute all the tasks.
-            List<Future<Map<Integer, ScoredTextDocument>>> futureList = threadPoolExecutor.invokeAll(callableList);
+        // Fill the heap for the first time.
+        for (int termIndex = 0; termIndex < terms.length; ++termIndex) {
+            List<Posting> termPostings = termsPostings.get(termIndex);
+            if (termPostings != null && !termPostings.isEmpty()) {
+                // Get the posting
+                Posting posting = termPostings.get(0);
+                heap.add(docFromPosting(posting, termPostings.size()));
+                // Fill the indexes
+                ++cosequentialIndexes[termIndex];
+            }
+        }
 
-            // Wait for the task to be finished and store the results.
-            List<Map<Integer, ScoredTextDocument>> results = new ArrayList<>();
-            for (Future<Map<Integer, ScoredTextDocument>> future : futureList) {
-                results.add(future.get());
+        // If the heap is empty, there are not results.
+        if (heap.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Initialize the process
+        ScoredTextDocument currentDocument = heap.poll();
+
+        // Iterate the list of postings.
+        Posting[] nextPostings = new Posting[terms.length];
+        while (true) {
+            // Get the next posting.
+            for (int termIndex = 0; termIndex < terms.length; ++termIndex) {
+                List<Posting> termPostings = termsPostings.get(termIndex);
+                if (termPostings != null && !termPostings.isEmpty()) {
+                    int postingIndex = cosequentialIndexes[termIndex];
+                    if (postingIndex < termPostings.size()) {
+                        nextPostings[termIndex] = termPostings.get(postingIndex);
+                    } else {
+                        nextPostings[termIndex] = null;
+                    }
+                } else {
+                    nextPostings[termIndex] = null;
+                }
             }
 
-            // Shut down the executor service.
-            threadPoolExecutor.shutdown();
+            // Break condition.
+            if (isEmptyArray(nextPostings)) {
+                break;
+            }
 
-            // Merge the results and retrieve.
-            return mergeResults(results);
-        } catch (InterruptedException | ExecutionException ex) {
-            System.err.println("The executor service has been interrupted:");
-            System.err.println(ex.getMessage());
-            return null;
+            // Get the posting
+            Posting nextPosting = minArrayElement(nextPostings, (Posting t1, Posting t2) -> Integer.compare(t1.getDocID(), t2.getDocID()));
+            int termIndex = Arrays.asList(nextPostings).indexOf(nextPosting);
+            cosequentialIndexes[termIndex] += 1;
+
+            // Add the new document to the heap.
+            heap.add(docFromPosting(nextPosting, termsPostings.get(termIndex).size()));
+
+            // Update values
+            ScoredTextDocument nextDocument = heap.poll();
+            if (currentDocument.getDocID() == nextDocument.getDocID()) {
+                nextDocument.setScore(currentDocument.getScore() + nextDocument.getScore());
+            } else {
+                minHeap.add(currentDocument);
+            }
+            currentDocument = nextDocument;
         }
+
+        // Empty the heap
+        currentDocument = heap.poll();
+        while (currentDocument != null) {
+            // Same routine until the heap is empty
+            ScoredTextDocument nextDocument = heap.poll();
+            if (nextDocument != null) {
+                if (currentDocument.getDocID() == nextDocument.getDocID()) {
+                    nextDocument.setScore(currentDocument.getScore() + nextDocument.getScore());
+                } else {
+                    minHeap.add(currentDocument);
+                }
+            } else {
+                minHeap.add(currentDocument);
+            }
+            currentDocument = nextDocument;
+        }
+
+        // Resturn the results.
+        return minHeap.asList();
     }
 
     /**
-     * Merges the result lists retrieved by all the threads.
+     * Returns a <code>ScoredTextDocument</code> object using a posting.
      *
-     * @param results List of list to be merged.
-     * @return A list of documents sorted by the decrementing score value.
+     * @param posting Posting used to construct the object.
+     * @param termPostingsSize The size of the term postings list.
+     * @return a <code>ScoredTextDocument</code> object..
      */
-    private List<ScoredTextDocument> mergeResults(List<Map<Integer, ScoredTextDocument>> results) {
+    private ScoredTextDocument docFromPosting(Posting posting, int termPostingsSize) {
+        // Attributes for calculation
+        double tf = 1 + Math.log(posting.getTermFrequency());
+        double idf = Math.log(((double) docsCount) / ((double) termPostingsSize));
+        // Add the scored document to the heap
+        return new ScoredTextDocument(posting.getDocID(), tf * idf / index.getDocModule(posting.getDocID()));
+    }
 
-        // Result map
-        HashMap<Integer, ScoredTextDocument> resultMap = new HashMap<>();
+    /**
+     * Returns true if an array is full of null objects.
+     *
+     * @param <T> Type of element.
+     * @param array Array to be checked.
+     * @return true if an array is full of null objects, false otherwise.
+     */
+    private <T> boolean isEmptyArray(T[] array) {
+        for (T t : array) {
+            if (t != null) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        // Merge all the maps
-        results.stream().forEach((map) -> {
-            map.forEach((Integer docID, ScoredTextDocument scoredDoc) -> {
-                ScoredTextDocument retrieved = resultMap.get(docID);
-                if (retrieved == null) {
-                    resultMap.put(docID, scoredDoc);
-                } else {
-                    retrieved.sumScore(scoredDoc.getScore());
+    /**
+     * Returns the minimum element in an array.
+     *
+     * @param <T> Type of array elements.
+     * @param array The array whose minimum element will be returned.
+     * @param comparator Comparator to compare the elements.
+     * @return the minimum element in an array.
+     */
+    private <T> T minArrayElement(T[] array, Comparator<? super T> comparator) {
+        T min = array[0];
+        for (int i = 1; i < array.length; ++i) {
+            if (min != null && array[i] != null) {
+                if (comparator.compare(array[i], min) < 0) {
+                    min = array[i];
                 }
-            });
-        });
+            } else if (array[i] != null) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
 
-        // Sort the result list.
-        ArrayList<ScoredTextDocument> resultList = new ArrayList<>(resultMap.values());
-        Collections.sort(resultList, Collections.reverseOrder());
-        return resultList;
+    /**
+     * Sets the maximum number of results to retrieve.
+     *
+     * @param topResultsNumber Maximum number of results to retrieve.
+     */
+    @Override
+    public void setTopResultsNumber(int topResultsNumber) {
+        this.TOP_RESULTS_NUMBER = topResultsNumber;
     }
 
     /**
@@ -197,6 +244,7 @@ public class TFIDFSearcher implements Searcher {
      * directory containing an index.
      */
     public static void main(String[] args) {
+        // Top results
         int TOP = 5;
 
         // Input control
@@ -215,6 +263,7 @@ public class TFIDFSearcher implements Searcher {
         if (index.isLoaded()) {
             TFIDFSearcher tfidfSearcher = new TFIDFSearcher();
             tfidfSearcher.build(index);
+            tfidfSearcher.setTopResultsNumber(TOP);
 
             // Ask for queries.
             Scanner scanner = new Scanner(System.in);
@@ -222,24 +271,24 @@ public class TFIDFSearcher implements Searcher {
             String query = scanner.nextLine();
             while (!query.equals("")) {
                 // Show results.
+                long fromTime = System.nanoTime();
                 List<ScoredTextDocument> resultList = tfidfSearcher.search(query);
+                long toTime = System.nanoTime();
                 // If there were no errors, show the results.
                 if (resultList != null) {
                     if (resultList.isEmpty()) {
                         System.out.println("No results.");
                     } else {
+                        System.out.println("Search time: " + ((toTime - fromTime) / 1e6) + " milliseconds");
                         System.out.println("Showing top " + TOP + " documents:");
-                        // Get sublist.
-                        if (resultList.size() >= TOP) {
-                            resultList = resultList.subList(0, TOP);
-                        }
                         resultList.forEach((ScoredTextDocument t) -> {
                             TextDocument document = index.getDocument(t.getDocID());
                             if (document != null) {
-                                System.out.println(document.getName());
+                                System.out.println("ID: " + document.getId() + "\tName: " + document.getName() + "\tScore: " + t.getScore());
                             }
                         });
                     }
+                    System.out.println();
                     System.out.print("Enter a query (press enter to finish): ");
                     query = scanner.nextLine();
                 } else {
