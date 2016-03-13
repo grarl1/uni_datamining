@@ -24,12 +24,21 @@ import es.uam.eps.bmi.search.indexing.IndexBuilder;
 import es.uam.eps.bmi.search.indexing.Posting;
 import es.uam.eps.bmi.search.parsing.BasicParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -201,7 +210,9 @@ public class LiteralMatchingSearcher implements Searcher {
      */
     public static void main(String[] args) {
         // Top results
-        int TOP = 5;
+        final int TOP = 5;
+        // Max content size
+        final int MAX_READ = 64;
 
         // Read configuration from XML.
         String outPath;
@@ -252,12 +263,15 @@ public class LiteralMatchingSearcher implements Searcher {
                     } else {
                         System.out.println("Search time: " + ((toTime - fromTime) / 1e6) + " milliseconds");
                         System.out.println("Showing top " + TOP + " documents:");
-                        resultList.forEach((ScoredTextDocument t) -> {
+                        for (ScoredTextDocument t : resultList) {
                             TextDocument document = index.getDocument(t.getDocID());
                             if (document != null) {
                                 System.out.println("ID: " + document.getId() + "\tName: " + document.getName() + "\tScore: " + t.getScore());
+                                String content = readContent(document.getName(), query, MAX_READ);
+                                System.out.println("Content: " + content);
+                                System.out.println();
                             }
-                        });
+                        }
                     }
                     System.out.println();
                     System.out.print("Enter a query (press enter to finish): ");
@@ -267,5 +281,139 @@ public class LiteralMatchingSearcher implements Searcher {
                 }
             }
         }
+    }
+
+    /**
+     * Reads content from a file. It will show until <code>maxRead</code>
+     * characters starting from the first occurrence from some of the terms in
+     * the <code>query</code> string.
+     *
+     * @param path Path to the file.
+     * @param query The query string.
+     * @param maxRead Maximum characters to return.
+     * @return The content of the file.
+     */
+    private static String readContent(String path, String query, int maxRead) {
+        File file = new File(path);
+        File parent = file.getParentFile();
+        if (parent != null && parent.exists()) {
+            // Zip file
+            if (isZipFile(parent)) {
+                return readZip(parent, path, query, maxRead);
+            } // Normal file 
+            else if (file.exists()) {
+                return readFile(file, query, maxRead);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Reads content from a zip file. It will show until <code>maxRead</code>
+     * characters starting from the first occurrence from some of the terms in
+     * the <code>query</code> string.
+     *
+     * @param parent The parent file of the file to be read.
+     * @param path Path to the file.
+     * @param query The query string.
+     * @param maxRead Maximum characters to return.
+     * @return The content of the file.
+     */
+    private static String readZip(File parent, String path, String query, int maxRead) {
+        try {
+            String fileName = path.substring(path.lastIndexOf("/") + 1);
+            ZipFile zipFile = new ZipFile(parent);
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                InputStream stream = zipFile.getInputStream(entry);
+                if (entry.getName().equals(fileName)) {
+                    byte[] byteContent = new byte[2048];
+                    int justRead;
+                    String s = "";
+                    while ((justRead = stream.read(byteContent)) > 0) {
+                        s += new String(byteContent, 0, justRead);
+                    }
+                    TextParser basicParser = new BasicParser();
+                    String document = basicParser.parse(s);
+                    String[] querySplit = query.split(" ");
+                    for (String term : querySplit) {
+                        if (document.contains(term)) {
+                            int termIndex = document.indexOf(term);
+                            int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
+                            return document.substring(termIndex, maxLength);
+                        }
+                    }
+                    int termIndex = 0;
+                    int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
+                    return document.substring(termIndex, maxLength);
+                }
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * * Reads content from a file. It will show until <code>maxRead</code>
+     * characters starting from the first occurrence from some of the terms in
+     * the <code>query</code> string.
+     *
+     * @param file The file to be read.
+     * @param query The query string.
+     * @param maxRead Maximum characters to return.
+     * @return The content of the file.
+     */
+    private static String readFile(File file, String query, int maxRead) {
+        try {
+            FileReader stream = new FileReader(file);
+            char[] charContent = new char[2048];
+            int justRead;
+            String s = "";
+            while ((justRead = stream.read(charContent)) > 0) {
+                s += new String(charContent, 0, justRead);
+            }
+            TextParser basicParser = new BasicParser();
+            String document = basicParser.parse(s);
+            String[] querySplit = query.split(" ");
+            for (String term : querySplit) {
+                if (document.contains(term)) {
+                    int termIndex = document.indexOf(term);
+                    int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
+                    return document.substring(termIndex, maxLength);
+                }
+            }
+            int termIndex = 0;
+            int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
+            return document.substring(termIndex, maxLength);
+        } catch (FileNotFoundException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if file passed is a zip file, false otherwise.
+     *
+     * @param file file to test
+     * @return true if file passed is a zip file, false otherwise.
+     */
+    private static boolean isZipFile(File file) {
+        try (FileInputStream fis = new FileInputStream(file);
+                ZipInputStream zis = new ZipInputStream(fis)) {
+            if (zis.getNextEntry() != null) {
+                return true;
+            }
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+        }
+        return false;
     }
 }
