@@ -22,7 +22,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -34,18 +33,18 @@ import org.xml.sax.SAXException;
  */
 public class IndexBuilder {
     
-    private final static String XML_INPUT = "index-settings.xml";
-    private final static String COLLECTION_TAG_NAME = "collection-folder";
-    private final static String OUTPATH_TAG_NAME = "index-folder";
-    private final static String BASIC_I_APPEND = "basic/";
-    private final static String STOP_I_APPEND = "stopword/";
-    private final static String STEM_I_APPEND = "stem/";
+    public final static String XML_INPUT = "index-settings.xml";
+    public final static String COLLECTION_TAG_NAME = "collection-folder";
+    public final static String OUTPATH_TAG_NAME = "index-folder";
+    public final static String BASIC_I_APPEND = "basic/";
+    public final static String STOP_I_APPEND = "stopword/";
+    public final static String STEM_I_APPEND = "stem/";
     
     /**
      * Main method for IndexBuilder.
      * Builds a BasicIndex, StopwordIndex and StemIndex reading
      * collection path and output from XML_INPUT file.
-     * @param args 
+     * @param args ignored.
      */
     public static void main(String[] args) {
         String collectionPath, outPath;
@@ -87,7 +86,5 @@ public class IndexBuilder {
         System.out.println("Creating Stem Index");
         StemIndex.main(new String[]{collectionPath, outPath + STEM_I_APPEND});
         System.out.println();
-        
     }
-    
 }
