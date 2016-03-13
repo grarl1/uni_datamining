@@ -20,12 +20,21 @@ import es.uam.eps.bmi.search.ScoredTextDocument;
 import es.uam.eps.bmi.search.TextDocument;
 import es.uam.eps.bmi.search.indexing.BasicIndex;
 import es.uam.eps.bmi.search.indexing.Index;
+import es.uam.eps.bmi.search.indexing.IndexBuilder;
 import es.uam.eps.bmi.search.indexing.Posting;
+import es.uam.eps.bmi.search.parsing.BasicParser;
+import es.uam.eps.bmi.search.parsing.TextParser;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Class implementing literal searcher.
@@ -70,6 +79,9 @@ public class LiteralMatchingSearcher implements Searcher {
 
         // Final list of terms
         List<Posting> finalPostingList = index.getTermPostings(terms[0]);
+        if (finalPostingList == null || finalPostingList.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         if (terms.length > 0) {
             terms = Arrays.copyOfRange(terms, 1, terms.length);
@@ -77,7 +89,12 @@ public class LiteralMatchingSearcher implements Searcher {
 
         // Iterate the terms
         for (String term : terms) {
-            finalPostingList = concatPostings(finalPostingList, index.getTermPostings(term));
+            List<Posting> nextPostingList = index.getTermPostings(term);
+            if (finalPostingList != null && nextPostingList != null && !finalPostingList.isEmpty() && !nextPostingList.isEmpty()) {
+                finalPostingList = concatPostings(finalPostingList, nextPostingList);
+            } else {
+                return new ArrayList<>();
+            }
         }
 
         // Build the list of results
@@ -95,8 +112,8 @@ public class LiteralMatchingSearcher implements Searcher {
             int sentenceFrequency = posting.getTermFrequency();
 
             // Compute the tf-idf
-            double idf = Math.log((double) docsCount / (double) sentenceDocsCount);
-            double tf = 1 + Math.log(sentenceFrequency);
+            double tf = 1 + (Math.log(sentenceFrequency) / Math.log(2));
+            double idf = Math.log((double) docsCount / (double) sentenceDocsCount) / Math.log(2);
             double tf_idf = tf * idf;
 
             // Compute the ranking
@@ -106,6 +123,10 @@ public class LiteralMatchingSearcher implements Searcher {
 
         // Sort the list and return
         Collections.sort(resultList, Collections.reverseOrder());
+
+        if (resultList.size() > TOP_RESULTS_NUMBER) {
+            return resultList.subList(1, TOP_RESULTS_NUMBER + 1);
+        }
         return resultList;
     }
 
@@ -139,7 +160,7 @@ public class LiteralMatchingSearcher implements Searcher {
                 Posting prevPosting = previousPostingList.get(prevPostingPos);
 
                 // Build the new posting.
-                for (int currPosition : prevPosting.getTermPositions()) {
+                for (int currPosition : currPosting.getTermPositions()) {
                     for (int prevPosition : prevPosting.getTermPositions()) {
                         if (currPosition == prevPosition + 1) {
                             resultPosting.addPosition(currPosition);
@@ -159,8 +180,7 @@ public class LiteralMatchingSearcher implements Searcher {
         }
         return resultPostings;
     }
-    
-    
+
     /**
      * Sets the maximum number of results to retrieve.
      *
@@ -170,31 +190,46 @@ public class LiteralMatchingSearcher implements Searcher {
     public void setTopResultsNumber(int topResultsNumber) {
         this.TOP_RESULTS_NUMBER = topResultsNumber;
     }
-    
 
     /**
-     * Main class for TF-IDF searcher.
+     * Main class for a literal searcher.
      *
      * Builds a searcher and asks the user for queries, showing the TOP 5
-     * results.
+     * results. Reads the configuration from XML_INPUT file.
      *
-     * @param args The following arguments are used: index_path: Path to a
-     * directory containing an index.
+     * @param args ignored.
      */
     public static void main(String[] args) {
+        // Top results
         int TOP = 5;
 
-        // Input control
-        if (args.length != 1) {
-            System.err.printf("Usage: %s index_path\n"
-                    + "\tindex_path: Path to a directory containing a Lucene index.\n",
-                    TFIDFSearcher.class.getSimpleName());
+        // Read configuration from XML.
+        String outPath;
+
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(IndexBuilder.XML_INPUT);
+            doc.getDocumentElement().normalize();
+            outPath = doc.getElementsByTagName(IndexBuilder.OUTPATH_TAG_NAME).item(0).getTextContent();
+        } catch (ParserConfigurationException | SAXException ex) {
+            System.err.println("Exception caught while configurating XML parser: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
             return;
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing IO operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        }
+        if (!outPath.endsWith("/")) {
+            outPath += "/";
         }
 
         // Create a LuceneIndex instance.
         Index index = new BasicIndex();
-        index.load(args[0]);
+        index.load(outPath + IndexBuilder.BASIC_I_APPEND);
+        TextParser parser = new BasicParser();
 
         // Check if the index has been correctly loaded.
         if (index.isLoaded()) {
@@ -207,24 +242,24 @@ public class LiteralMatchingSearcher implements Searcher {
             String query = scanner.nextLine();
             while (!query.equals("")) {
                 // Show results.
-                List<ScoredTextDocument> resultList = literalMatchingSearcher.search(query);
+                long fromTime = System.nanoTime();
+                List<ScoredTextDocument> resultList = literalMatchingSearcher.search(parser.parse(query));
+                long toTime = System.nanoTime();
                 // If there were no errors, show the results.
                 if (resultList != null) {
                     if (resultList.isEmpty()) {
                         System.out.println("No results.");
                     } else {
+                        System.out.println("Search time: " + ((toTime - fromTime) / 1e6) + " milliseconds");
                         System.out.println("Showing top " + TOP + " documents:");
-                        // Get sublist.
-                        if (resultList.size() >= TOP) {
-                            resultList = resultList.subList(0, TOP);
-                        }
                         resultList.forEach((ScoredTextDocument t) -> {
                             TextDocument document = index.getDocument(t.getDocID());
                             if (document != null) {
-                                System.out.println(document.getName());
+                                System.out.println("ID: " + document.getId() + "\tName: " + document.getName() + "\tScore: " + t.getScore());
                             }
                         });
                     }
+                    System.out.println();
                     System.out.print("Enter a query (press enter to finish): ");
                     query = scanner.nextLine();
                 } else {

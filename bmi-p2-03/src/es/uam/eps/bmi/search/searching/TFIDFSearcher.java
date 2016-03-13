@@ -20,14 +20,28 @@ import es.uam.eps.bmi.search.ScoredTextDocument;
 import es.uam.eps.bmi.search.TextDocument;
 import es.uam.eps.bmi.search.indexing.BasicIndex;
 import es.uam.eps.bmi.search.indexing.Index;
+import es.uam.eps.bmi.search.indexing.IndexBuilder;
 import es.uam.eps.bmi.search.indexing.Posting;
+import es.uam.eps.bmi.search.indexing.StemIndex;
+import es.uam.eps.bmi.search.indexing.StopwordIndex;
+import es.uam.eps.bmi.search.parsing.BasicParser;
+import es.uam.eps.bmi.search.parsing.StemParser;
+import es.uam.eps.bmi.search.parsing.StopwordParser;
+import es.uam.eps.bmi.search.parsing.TextParser;
 import es.uam.eps.bmi.util.MinHeap;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Scanner;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Class implementing an information retrieval vector model with TF-IDF terms
@@ -39,7 +53,7 @@ import java.util.Scanner;
 public class TFIDFSearcher implements Searcher {
 
     // Maximum number of results to retrieve.
-    int TOP_RESULTS_NUMBER = 5;
+    private int TOP_RESULTS_NUMBER = 5;
 
     //Index used to search
     private Index index;
@@ -141,7 +155,7 @@ public class TFIDFSearcher implements Searcher {
             heap.add(docFromPosting(nextPosting, termsPostings.get(termIndex).size()));
 
             // Update values
-            ScoredTextDocument nextDocument = heap.poll();
+            ScoredTextDocument nextDocument = heap.poll(); // Get the head document.
             if (currentDocument.getDocID() == nextDocument.getDocID()) {
                 nextDocument.setScore(currentDocument.getScore() + nextDocument.getScore());
             } else {
@@ -168,7 +182,9 @@ public class TFIDFSearcher implements Searcher {
         }
 
         // Resturn the results.
-        return minHeap.asList();
+        List<ScoredTextDocument> result = minHeap.asList();
+        Collections.sort(result, Collections.reverseOrder());
+        return result;
     }
 
     /**
@@ -180,10 +196,11 @@ public class TFIDFSearcher implements Searcher {
      */
     private ScoredTextDocument docFromPosting(Posting posting, int termPostingsSize) {
         // Attributes for calculation
-        double tf = 1 + Math.log(posting.getTermFrequency());
-        double idf = Math.log(((double) docsCount) / ((double) termPostingsSize));
+        double tf = 1 + (Math.log(posting.getTermFrequency()) / Math.log(2));
+        double idf = Math.log(((double) docsCount) / ((double) termPostingsSize)) / Math.log(2);
+        double docMod = index.getDocModule(posting.getDocID());
         // Add the scored document to the heap
-        return new ScoredTextDocument(posting.getDocID(), tf * idf / index.getDocModule(posting.getDocID()));
+        return new ScoredTextDocument(posting.getDocID(), tf * idf / docMod);
     }
 
     /**
@@ -238,26 +255,74 @@ public class TFIDFSearcher implements Searcher {
      * Main class for TF-IDF searcher.
      *
      * Builds a searcher and asks the user for queries, showing the TOP 5
-     * results.
+     * results. Reads the configuration from XML_INPUT file.
      *
-     * @param args The following arguments are used: index_path: Path to a
-     * directory containing an index.
+     * @param args ignored.
      */
     public static void main(String[] args) {
         // Top results
         int TOP = 5;
 
-        // Input control
-        if (args.length != 1) {
-            System.err.printf("Usage: %s index_path\n"
-                    + "\tindex_path: Path to a directory containing a Lucene index.\n",
-                    TFIDFSearcher.class.getSimpleName());
+        // Read configuration from XML.
+        String outPath;
+
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(IndexBuilder.XML_INPUT);
+            doc.getDocumentElement().normalize();
+            outPath = doc.getElementsByTagName(IndexBuilder.OUTPATH_TAG_NAME).item(0).getTextContent();
+        } catch (ParserConfigurationException | SAXException ex) {
+            System.err.println("Exception caught while configurating XML parser: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return;
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing IO operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
             return;
         }
+        if (!outPath.endsWith("/")) {
+            outPath += "/";
+        }
 
-        // Create a LuceneIndex instance.
-        Index index = new BasicIndex();
-        index.load(args[0]);
+        // Ask for type of searcher
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Choose the index type: ");
+        System.out.println("\tBasic: 1");
+        System.out.println("\tStopword: 2");
+        System.out.println("\tStemming: 3");
+        System.out.print("Enter the option (1, 2, 3): ");
+        String optionStr = scanner.nextLine();
+        // Create a Index instance.
+        Index index;
+        TextParser parser;
+        try {
+            int option = Integer.valueOf(optionStr);
+            switch (option) {
+                case 1:
+                    index = new BasicIndex();
+                    parser = new BasicParser();
+                    index.load(outPath + IndexBuilder.BASIC_I_APPEND);
+                    break;
+                case 2:
+                    index = new StopwordIndex();
+                    parser = new StopwordParser();
+                    index.load(outPath + IndexBuilder.STOP_I_APPEND);
+                    break;
+                case 3:
+                    index = new StemIndex();
+                    parser = new StemParser();
+                    index.load(outPath + IndexBuilder.STEM_I_APPEND);
+                    break;
+                default:
+                    System.err.println(optionStr + ": not an option.");
+                    return;
+            }
+        } catch (NumberFormatException ex) {
+            System.err.println(optionStr + ": not an option.");
+            return;
+        }
 
         // Check if the index has been correctly loaded.
         if (index.isLoaded()) {
@@ -266,13 +331,12 @@ public class TFIDFSearcher implements Searcher {
             tfidfSearcher.setTopResultsNumber(TOP);
 
             // Ask for queries.
-            Scanner scanner = new Scanner(System.in);
             System.out.print("Enter a query (press enter to finish): ");
             String query = scanner.nextLine();
             while (!query.equals("")) {
                 // Show results.
                 long fromTime = System.nanoTime();
-                List<ScoredTextDocument> resultList = tfidfSearcher.search(query);
+                List<ScoredTextDocument> resultList = tfidfSearcher.search(parser.parse(query));
                 long toTime = System.nanoTime();
                 // If there were no errors, show the results.
                 if (resultList != null) {
