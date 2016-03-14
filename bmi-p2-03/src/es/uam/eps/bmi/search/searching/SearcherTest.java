@@ -168,8 +168,12 @@ public class SearcherTest {
             return;
         }
 
-        // Print TF-IDF searcher
+        // Print precisions
         printPrecision(indexNames, searcherNames, indexes, searchers, parsers, relevanceReader, queriesList);
+
+        // Measure TF-IDF cost
+        System.out.println("Measures for the basic index and TF-IDF searcher:");
+        printCost(basicIndex, tfidfSearcher, basicParser, queriesList);
     }
 
     /**
@@ -237,5 +241,31 @@ public class SearcherTest {
             }
         }
         return ((double) intersectionCount / (double) n);
+    }
+
+    /**
+     * Calculates and prints the cost of run the queries using a particular
+     * index and searcher.
+     * 
+     * @param index Index to use.
+     * @param searcher Searcher to use.
+     * @param parser Parse to parse the queries.
+     * @param queriesList List of queries.
+     */
+    private static void printCost(Index index, Searcher searcher, TextParser parser, ArrayList<String> queriesList) {
+        
+        // Initialize the searcher.
+        searcher.setTopResultsNumber(10);
+        searcher.build(index);
+        
+        // Start measuring
+        Runtime runtime = Runtime.getRuntime();
+        long start = System.nanoTime();
+        queriesList.stream().forEach((query) -> {
+            searcher.search(parser.parse(query));
+        });
+        long end = System.nanoTime();
+        
+        System.out.println("Elapsed time: " + (end-start)/1e6 + " milliseconds.");
     }
 }

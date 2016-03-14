@@ -63,7 +63,7 @@ public class BasicIndex implements Index {
         this.indexPath = outputIndexPath;
 
         // Start timing.
-        Date start = new Date();
+        long start = System.nanoTime();
         System.out.println("Indexing documents from '" + inputCollectionPath + "', this may take a while...");
 
         // Create writer.
@@ -80,8 +80,8 @@ public class BasicIndex implements Index {
         }
 
         // Stop timing and print elapsed time.
-        Date end = new Date();
-        System.out.println(end.getTime() - start.getTime() + " total milliseconds");
+        long end = System.nanoTime();
+        System.out.println((end - start)/1e6 + " total milliseconds");
         reader = null;
     }
 

@@ -29,12 +29,14 @@ import es.uam.eps.bmi.search.parsing.StemParser;
 import es.uam.eps.bmi.search.parsing.StopwordParser;
 import es.uam.eps.bmi.search.parsing.TextParser;
 import es.uam.eps.bmi.util.MinHeap;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -436,26 +438,25 @@ public class TFIDFSearcher implements Searcher {
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 InputStream stream = zipFile.getInputStream(entry);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+                // Find file
                 if (entry.getName().equals(fileName)) {
-                    byte[] byteContent = new byte[2048];
-                    int justRead;
-                    String s = "";
-                    while ((justRead = stream.read(byteContent)) > 0) {
-                        s += new String(byteContent, 0, justRead);
-                    }
                     TextParser basicParser = new BasicParser();
-                    String document = basicParser.parse(s);
-                    String[] querySplit = query.split(" ");
-                    for (String term : querySplit) {
-                        if (document.contains(term)) {
-                            int termIndex = document.indexOf(term);
-                            int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
-                            return document.substring(termIndex, maxLength);
+                    // Start reading
+                    String line = reader.readLine();
+                    while (line != null) {
+                        line = basicParser.parse(line);
+                        String[] querySplit = query.split(" ");
+                        // Find query term
+                        for (String term : querySplit) {
+                            if (line.contains(term)) {
+                                int termIndex = line.indexOf(term);
+                                int maxLength = (termIndex + maxRead) < line.length() ? (termIndex + maxRead) : line.length();
+                                return line.substring(termIndex, maxLength);
+                            }
                         }
+                        line = reader.readLine();
                     }
-                    int termIndex = 0;
-                    int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
-                    return document.substring(termIndex, maxLength);
                 }
             }
         } catch (IOException ex) {
@@ -478,25 +479,23 @@ public class TFIDFSearcher implements Searcher {
     private static String readFile(File file, String query, int maxRead) {
         try {
             FileReader stream = new FileReader(file);
-            char[] charContent = new char[2048];
-            int justRead;
-            String s = "";
-            while ((justRead = stream.read(charContent)) > 0) {
-                s += new String(charContent, 0, justRead);
-            }
+            BufferedReader reader = new BufferedReader(stream);
             TextParser basicParser = new BasicParser();
-            String document = basicParser.parse(s);
-            String[] querySplit = query.split(" ");
-            for (String term : querySplit) {
-                if (document.contains(term)) {
-                    int termIndex = document.indexOf(term);
-                    int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
-                    return document.substring(termIndex, maxLength);
+            // Start reading
+            String line = reader.readLine();
+            while (line != null) {
+                line = basicParser.parse(line);
+                String[] querySplit = query.split(" ");
+                // Find query term
+                for (String term : querySplit) {
+                    if (line.contains(term)) {
+                        int termIndex = line.indexOf(term);
+                        int maxLength = (termIndex + maxRead) < line.length() ? (termIndex + maxRead) : line.length();
+                        return line.substring(termIndex, maxLength);
+                    }
                 }
+                line = reader.readLine();
             }
-            int termIndex = 0;
-            int maxLength = (termIndex + maxRead) < document.length() ? (termIndex + maxRead) : document.length();
-            return document.substring(termIndex, maxLength);
         } catch (FileNotFoundException ex) {
             System.err.println("Exception caught while performing an I/O operation: " + ex.getClass().getSimpleName());
             System.err.println(ex.getMessage());
