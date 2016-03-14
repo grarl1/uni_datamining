@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * IndexEntry class. Represents the data structure that is written into index
- * files for each term. Such data has the following format:</br>
+ * files for each term. Such data has the following format:<br>
  * termString,delimiter,#postingsSize,docid,#postings1,position1,..positionN,docid2,#postings2,position1,...,positionM,...
  * written as binary to file, so each number after termString is a long.
  *
@@ -32,14 +32,14 @@ import java.io.IOException;
 public class IndexEntry {
 
     /* delimiter for the end of the term string in byte array read from disc */
-    public static final char delimiter = ' ';
+    public static final char DELIMITER = ' ';
 
     /* String representing the term */
-    private String term;
+    private final String term;
     /* size in bytes of the data structure written for Postings */
-    private int postingsSize;
+    private final int postingsSize;
     /* portion of the Entry that holds the list of postings for each docid */
-    private byte[] rawPostingsData;
+    private final byte[] rawPostingsData;
 
     /**
      * Default constructor.
@@ -47,7 +47,7 @@ public class IndexEntry {
      * @param term term string
      * @param postingsSize size of rawPostingsData
      * @param rawPostingsData raw data for postings, represents a stream of
-     * bytes </br>
+     * bytes <br>
      * with following format:
      * docid1,#postings1,position1,..positionN,docid2,#postings2,...
      */
@@ -56,8 +56,6 @@ public class IndexEntry {
         this.postingsSize = postingsSize;
         this.rawPostingsData = rawPostingsData;
     }
-
-    ;
 
     /**
      * Returns the associated term.
@@ -94,12 +92,13 @@ public class IndexEntry {
      *
      * @param dis input stream to read from.
      * @return IndexEntry with term read.
+     * @throws java.io.IOException
      */
     public static IndexEntry readEntry(DataInput dis) throws IOException {
         String term = "";
         try {
             char read;
-            while ((read = dis.readChar()) != delimiter) {
+            while ((read = dis.readChar()) != DELIMITER) {
                 term += Character.toString(read);
             }
             //read size of postings list
@@ -141,5 +140,4 @@ public class IndexEntry {
         System.arraycopy(e2.getRawPostingsData(), 0, newPosting, (int) e1.getPostingsSize(), (int) e2.getPostingsSize());
         return new IndexEntry(e1.getTerm(), newSize, newPosting);
     }
-
 }

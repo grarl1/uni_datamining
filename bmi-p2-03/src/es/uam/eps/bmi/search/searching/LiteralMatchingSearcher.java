@@ -215,29 +215,13 @@ public class LiteralMatchingSearcher implements Searcher {
         final int MAX_READ = 64;
 
         // Read configuration from XML.
-        String outPath;
+        String outPath = getIndexPath();
 
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder;
-        try {
-            dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(IndexBuilder.XML_INPUT);
-            doc.getDocumentElement().normalize();
-            outPath = doc.getElementsByTagName(IndexBuilder.OUTPATH_TAG_NAME).item(0).getTextContent();
-        } catch (ParserConfigurationException | SAXException ex) {
-            System.err.println("Exception caught while configurating XML parser: " + ex.getClass().getSimpleName());
-            System.err.println(ex.getMessage());
-            return;
-        } catch (IOException ex) {
-            System.err.println("Exception caught while performing IO operation: " + ex.getClass().getSimpleName());
-            System.err.println(ex.getMessage());
+        if (outPath == null) {
             return;
         }
-        if (!outPath.endsWith("/")) {
-            outPath += "/";
-        }
 
-        // Create a LuceneIndex instance.
+        // Create a index instance.
         Index index = new BasicIndex();
         index.load(outPath + IndexBuilder.BASIC_I_APPEND);
         TextParser parser = new BasicParser();
@@ -281,6 +265,36 @@ public class LiteralMatchingSearcher implements Searcher {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the path where the three indexes are stored.
+     *
+     * @return the path where the three indexes are stored.
+     */
+    private static String getIndexPath() {
+        // Read configuration from XML.
+        String outPath;
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(IndexBuilder.XML_INPUT);
+            doc.getDocumentElement().normalize();
+            outPath = doc.getElementsByTagName(IndexBuilder.OUTPATH_TAG_NAME).item(0).getTextContent();
+        } catch (ParserConfigurationException | SAXException ex) {
+            System.err.println("Exception caught while configurating XML parser: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return null;
+        } catch (IOException ex) {
+            System.err.println("Exception caught while performing IO operation: " + ex.getClass().getSimpleName());
+            System.err.println(ex.getMessage());
+            return null;
+        }
+        if (!outPath.endsWith("/")) {
+            outPath += "/";
+        }
+        return outPath;
     }
 
     /**

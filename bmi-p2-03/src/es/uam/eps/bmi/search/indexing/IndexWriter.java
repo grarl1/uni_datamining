@@ -32,10 +32,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * IndexWriter class.
- * Main builder for indexes, adds documents to the index writing to disc when
- * needed to avoid RAM overload. It also merges every subindex built in the process
- * to the final index.
+ * IndexWriter class. Main builder for indexes, adds documents to the index
+ * writing to disc when needed to avoid RAM overload. It also merges every
+ * subindex built in the process to the final index.
  *
  * @author Enrique Cabrerizo Fernández
  * @author Guillermo Ruiz Álvarez
@@ -113,21 +112,23 @@ public class IndexWriter {
     }
 
     /**
-     * Adds document passed to the index.</br>
+     * Adds document passed to the index.<br>
      * Assumes that every term in content is separated by spaces.
      *
      * @param docName name of the document.
      * @param content string with content of document.
+     * @throws java.io.IOException
      */
     public void add(String docName, String content) throws IOException {
         add(docName, content.split("\\s+"));
     }
 
     /**
-     * Adds document passed to the index.</br>
+     * Adds document passed to the index.<br>
      *
      * @param docName name of the document.
      * @param content tokens to add literally to the document
+     * @throws java.io.IOException
      */
     public void add(String docName, String[] content) throws IOException {
         int termPosition = 0;
@@ -156,7 +157,7 @@ public class IndexWriter {
                 p.addPosition(termPosition);
                 lp = new ArrayList<>();
                 lp.add(p);
-                currentBlockSize += ((term + Character.toString(IndexEntry.delimiter)).length()) * Character.BYTES
+                currentBlockSize += ((term + Character.toString(IndexEntry.DELIMITER)).length()) * Character.BYTES
                         + Integer.BYTES + (1 + p.positionsToBytesSize());
             }
             termmap.put(term, lp);
@@ -174,6 +175,8 @@ public class IndexWriter {
      * Finishes the creation of the index. This method must be called after last
      * document is added so the index can be closed and every temp file merged
      * correctly.
+     *
+     * @throws java.io.IOException
      */
     public void close() throws IOException {
 
@@ -242,10 +245,10 @@ public class IndexWriter {
     private void merge(File src1, File src2, File dst, boolean lastMerge) throws IOException {
         int currentTermGap = TERM_MAP_SIZE; //ensures that the first term is added to map with offset 0
         int currentOffset = 0;
-        int bytesWritten = 0;
-        DataInputStream dis1 = null, dis2 = null;
-        DataOutputStream dos = null;
-        IndexEntry e1 = null, e2 = null, entryOut = null;
+        int bytesWritten;
+        DataInputStream dis1, dis2 = null;
+        DataOutputStream dos;
+        IndexEntry e1, e2 = null, entryOut;
         if ((src2 == null) && (lastMerge != true)) { //odd number of files, just rename for next iteration and return
             src1.renameTo(dst);
             return;
@@ -273,11 +276,11 @@ public class IndexWriter {
                 e1 = IndexEntry.readEntry(dis1);
                 e2 = IndexEntry.readEntry(dis2);
             }
-            dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.delimiter));
+            dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.DELIMITER));
             dos.writeInt(entryOut.getPostingsSize());
             dos.write(entryOut.getRawPostingsData());
             if (lastMerge) { //if merging last two files, update termOffset and document modules
-                bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.delimiter)).length() * Character.BYTES
+                bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.DELIMITER)).length() * Character.BYTES
                         + Integer.BYTES + entryOut.getPostingsSize();
                 if (currentTermGap == TERM_MAP_SIZE) { //save term to map
                     termsoffset.put(entryOut.getTerm(), currentOffset);
@@ -299,11 +302,11 @@ public class IndexWriter {
             entryOut = e2;
         }
         while (entryOut != null) {
-            dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.delimiter));
+            dos.writeChars(entryOut.getTerm() + Character.toString(IndexEntry.DELIMITER));
             dos.writeInt(entryOut.getPostingsSize());
             dos.write(entryOut.getRawPostingsData());
             if (lastMerge) { //if merging last two files, update termOffset and document modules
-                bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.delimiter)).length() * Character.BYTES
+                bytesWritten = (entryOut.getTerm() + Character.toString(IndexEntry.DELIMITER)).length() * Character.BYTES
                         + Integer.BYTES + entryOut.getPostingsSize();
                 if (currentTermGap == TERM_MAP_SIZE) { //save term to map
                     termsoffset.put(entryOut.getTerm(), currentOffset);
@@ -317,7 +320,9 @@ public class IndexWriter {
         }
         dis1.close();
         if (src2 != null) {
-            dis2.close();
+            if (dis2 != null) {
+                dis2.close();
+            }
         }
         dos.flush();
         dos.close();
@@ -337,23 +342,22 @@ public class IndexWriter {
                 parent.mkdirs();
             }
         }
-        // for every term, write it followed by a ' ' and then, the size of the
-        // postings list and the list itself.
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
-        for (String term : termmap.keySet()) {
-            List<Posting> lp = termmap.get(term);
-            int size = 0;
-            for (Posting p : lp) {
-                size += p.positionsToBytesSize();
+        try (
+                // for every term, write it followed by a ' ' and then, the size of the
+                // postings list and the list itself.
+                DataOutputStream dos = new DataOutputStream(new FileOutputStream(f))) {
+            for (String term : termmap.keySet()) {
+                List<Posting> lp = termmap.get(term);
+                int size = 0;
+                size = lp.stream().map((p) -> p.positionsToBytesSize()).reduce(size, Integer::sum);
+                dos.writeChars(term + Character.toString(IndexEntry.DELIMITER));
+                dos.writeInt(size);
+                for (Posting p : lp) {
+                    dos.write(p.positionsToBytes());
+                }
             }
-            dos.writeChars(term + Character.toString(IndexEntry.delimiter));
-            dos.writeInt(size);
-            for (Posting p : lp) {
-                dos.write(p.positionsToBytes());
-            }
+            dos.flush();
         }
-        dos.flush();
-        dos.close();
         currentBlockId++;
         currentBlockSize = 0;
         termmap.clear();
@@ -374,11 +378,11 @@ public class IndexWriter {
         }
 
         int docNoAppearance = lp.size();
-        for (Posting p : lp) {
+        lp.stream().forEach((p) -> {
             double tf = 1 + (Math.log(p.getTermFrequency()) / Math.log(2));
             double idf = Math.log((currentDocId * 1.0) / docNoAppearance) / Math.log(2);
             docMod[(int) p.getDocID()] += Math.pow(tf, 2) * Math.pow(idf, 2);
-        }
+        });
     }
 
     /**

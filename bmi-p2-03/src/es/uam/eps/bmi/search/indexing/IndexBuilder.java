@@ -16,7 +16,6 @@
  */
 package es.uam.eps.bmi.search.indexing;
 
-import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,7 +47,6 @@ public class IndexBuilder {
      */
     public static void main(String[] args) {
         String collectionPath, outPath;
-        File inputFile = new File("input.txt");
         
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;

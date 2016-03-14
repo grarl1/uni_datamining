@@ -68,7 +68,7 @@ public class StemParser extends StopwordParser {
         String[] terms = super.parse(text, "\\s+");
         for (String s : terms) {
             stemmer.setCurrent(s);
-            for (int i=0; i< times; i++) {
+            for (int i = 0; i < times; i++) {
                 stemmer.stem();
             }
             String stemmed = stemmer.getCurrent();
@@ -89,11 +89,10 @@ public class StemParser extends StopwordParser {
      */
     @Override
     public String[] parse(String text, String splitter) {
-        Class stemClass;
         List<String> filtered = new ArrayList<>();
         String[] terms = super.parse(text, splitter);
         for (String s : terms) {
-            for (int i=0; i< times; i++) {
+            for (int i = 0; i < times; i++) {
                 stemmer.stem();
             }
             String stemmed = stemmer.getCurrent();
