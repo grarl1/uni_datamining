@@ -20,3 +20,4 @@ manifest.mf
 *.out
 *.synctex.gz
 *.toc
+/bmi-p3-03/build/
