@@ -259,7 +259,6 @@ public class SearcherTest {
         searcher.build(index);
         
         // Start measuring
-        Runtime runtime = Runtime.getRuntime();
         long start = System.nanoTime();
         queriesList.stream().forEach((query) -> {
             searcher.search(parser.parse(query));

@@ -1,4 +1,4 @@
 <index-settings>
-	<collection-folder>bmi-p2-03/zips/docs1k.zip</collection-folder>
-	<index-folder>bmi-p2-03/out/all</index-folder>
+	<collection-folder>/home/rual/dev/java/DataMining/bmi-p2-03/data/clueweb-100K/data</collection-folder>
+	<index-folder>/home/rual/dev/java/DataMining/bmi-p2-03/data/index/clueweb-100K</index-folder>
 </index-settings>

@@ -1,4 +1,4 @@
 <index-settings>
-	<collection-folder>bmi-p2-03/zips/docs1k.zip</collection-folder>
-	<index-folder>bmi-p2-03/out/all</index-folder>
+	<collection-folder>data/clueweb-1K/data</collection-folder>
+	<index-folder>data/index/clueweb-1K</index-folder>
 </index-settings>
