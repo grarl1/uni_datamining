@@ -51,7 +51,7 @@ import org.xml.sax.SAXException;
 public class SearcherTest {
 
     private static final int INDEX_N = 3;
-    private static final int SEARCHER_N = 2;
+    private static final int SEARCHER_N = 3;
     private static final String QUERIES_FILE_NAME = "queries.txt";
     private static final String RELEVANCE_FILE_NAME = "relevance.txt";
 
@@ -140,6 +140,10 @@ public class SearcherTest {
         Searcher literarSearcher = new LiteralMatchingSearcher();
         searcherNames[1] = "Literal searcher";
         searchers[1] = literarSearcher;
+        // Proximal
+        Searcher proximalSearcher = new ProximalSearcher();
+        searcherNames[2] = "Proximal searcher";
+        searchers[2] = proximalSearcher;
 
         // Construct the readers and the writer.
         BufferedReader queriesReader;
@@ -173,7 +177,7 @@ public class SearcherTest {
 
         // Measure TF-IDF cost
         System.out.println("Measures for the basic index and TF-IDF searcher:");
-        printCost(basicIndex, tfidfSearcher, basicParser, queriesList);
+        printCost(basicIndex, proximalSearcher, basicParser, queriesList);
     }
 
     /**
