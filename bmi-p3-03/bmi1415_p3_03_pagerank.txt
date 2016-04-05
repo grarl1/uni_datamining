@@ -1,0 +1,50 @@
+Guillermo Ruíz Álvarez
+Enrique Cabrerizo Fernández
+
+Para la implementación de PageRank se ha utilizado una tabla hash de dimensión 2 utilizando la libreria Guava (libreria Java de Google).
+Las filas y columnas de la tabla se indexan por un id único dado a cada archivo en el momento de su primera lectura.
+El valor guardado en la columna (i,j) se corresponde con el número total de enlaces que parten de la página i. No existirá valor (i,j) en la
+tabla si no hay enlace i->j.
+Una página sumidero no contiene entradas en la tabla, pero se guarda su ID en una lista de nodos sumidero.
+Se han considerado nodos sumidero aquellos que:
+	No contienen enlaces salientes.
+	Unicamente contienen un enlace saliente y es a sí mismo.
+
+El algoritmo para cuando:
+	Se han alcanzado el número máximo de iteraciones.
+	Los pesos han variado menos que un umbral configurable.
+
+Output para la colección de 100k:
+
+Top Documents:
+clueweb09-en0003-78-25744 score: 1.2287932772168524E-4
+clueweb09-en0001-41-06265 score: 8.904493608243411E-5
+clueweb09-en0001-86-23899 score: 8.289945074019943E-5
+clueweb09-en0004-59-04988 score: 6.71762482833934E-5
+clueweb09-en0004-59-05001 score: 6.71762482833934E-5
+clueweb09-en0011-57-23988 score: 6.39090091908997E-5
+clueweb09-en0003-73-29384 score: 5.6055819154066645E-5
+clueweb09-en0011-24-26990 score: 5.291454300408506E-5
+clueweb09-en0009-53-12713 score: 4.7609904283627055E-5
+clueweb09-en0007-02-12581 score: 4.648920563206055E-5
+Content of clueweb09-en0003-78-25744:
+http ok content type text html charset utf content encoding gzip expires wed jan gmt content language en us keep alive timeout max p p cp cao dsp cor cura adma deva psaa psda ivai ivdi coni our otri ind phy onl uni fin com nav int dem sta date wed jan gmt cache control private connection keep alive 
+Content of clueweb09-en0001-41-06265:
+http ok content type text html content encoding gzip date wed jan gmt vary accept encoding pragma no cache cache control max age no cache no store server ibm http server apache unix connection close set cookie dcol uid path expires sat jan gmt domain discovery com expires wed jan gmt content length 
+Content of clueweb09-en0001-86-23899:
+http ok content type text html content encoding gzip vary accept encoding server yts expires fri jan gmt p p policyref http p p yahoo com w c p p xml cp cao dsp cor cur adm dev tai psa psd ivai ivdi coni telo otpi our deli sami otri unri pubi ind phy onl uni pur fin com nav int dem cnt sta pol hea p
+Content of clueweb09-en0004-59-04988:
+http ok content type text html x powered by asp net server microsoft iis cache control private date thu jan gmt connection close set cookie aspsessionidcarbcbqt cdfdehddjhijcabnnccphngd path content length applications metagenomics microbial diversity life sciences a roche company skip to content li
+Content of clueweb09-en0004-59-05001:
+http ok content type text html x powered by asp net server microsoft iis cache control private date thu jan gmt connection close set cookie aspsessionidacsbbbrs mbpjblbdepapahpgpbnoldag path content length fields of biology metagenomics microbial diversity life sciences a roche company skip to conte
+Content of clueweb09-en0011-57-23988:
+http ok content type text html charset utf content md vary content id server apache expires mon jan gmt date sun jan gmt pragma no cache cache control public must revalidate connection close set cookie viqsid de f ed db af e b b expires sun jan gmt path domain visahq com content length visahq com si
+Content of clueweb09-en0003-73-29384:
+http ok content type text html charset utf server apache expires thu nov gmt keep alive timeout max transfer encoding chunked date tue jan gmt pragma no cache cache control no store no cache must revalidate post check pre check connection keep alive set cookie geo data b region a ga c connectionspee
+Content of clueweb09-en0011-24-26990:
+http ok content type text html server ibm http server apache unix mod jk date sat jan gmt connection close content length site map agency tree search text size a a a text only site accessibility view the subject categories site map site map agency tree a to z agency list administration administrativ
+Content of clueweb09-en0009-53-12713:
+http ok content type text html content encoding gzip vary accept encoding x powered by p server microsoft iis date sat jan gmt cache control private max age connection close content length gps navigation reviews and price comparisons from pc magazine digital cameras laptops mp players cell phones pr
+Content of clueweb09-en0007-02-12581:
+http ok content type text html server microsoft iis x powered by asp net date wed jan gmt connection close content length gsm coverage maps gsm world making the world mobile newsroom about us our work technology events awards membership seach gsm world technology gsm roaming gsm coverage maps gsm gp
+BUILD SUCCESSFUL (total time: 5 minutes 34 seconds)

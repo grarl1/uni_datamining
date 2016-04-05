@@ -21,3 +21,4 @@ manifest.mf
 *.synctex.gz
 *.toc
 /bmi-p3-03/build/
+/bmi-p3-03/dist/
