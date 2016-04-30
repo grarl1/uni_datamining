@@ -3,7 +3,7 @@ Enrique Cabrerizo Fernández
 
 Para la implementación de PageRank se ha utilizado una tabla hash de dimensión 2 utilizando la libreria Guava (libreria Java de Google).
 Las filas y columnas de la tabla se indexan por un id único dado a cada archivo en el momento de su primera lectura.
-El valor guardado en la columna (i,j) se corresponde con el número total de enlaces que parten de la página i. No existirá valor (i,j) en la
+El valor guardado en la posición (i,j) se corresponde con el número total de enlaces que parten de la página i. No existirá valor (i,j) en la
 tabla si no hay enlace i->j.
 Una página sumidero no contiene entradas en la tabla, pero se guarda su ID en una lista de nodos sumidero.
 Se han considerado nodos sumidero aquellos que:
@@ -14,7 +14,92 @@ El algoritmo para cuando:
 	Se han alcanzado el número máximo de iteraciones.
 	Los pesos han variado menos que un umbral configurable.
 
+
+*****************************************************************************************************************
+	NOTA para el output de 1k:
+		Existen diferencias en el formato de los nombres entre el archivo de links y el archivo zip.
+		Así, en el archivo de links encontramos 'clueweb09-en0002-80-09432' mientras que en el zip encontramos
+		'clueweb09-en0002-80-9432'. Esto provoca que algunos archivos no se encuentren y su output sea null.
+		Esto NO ocurre en las colecciones de documentos de 10k y 100k.
+*****************************************************************************************************************
+
+/////////////////////////////////
+Output para la colección de 1k:
+/////////////////////////////////
+
+Top Documents:
+clueweb09-en0005-08-38562 score: 0.0018613949744522456
+clueweb09-en0002-80-09432 score: 0.0018613949744522456
+clueweb09-en0004-68-17977 score: 0.0018613949744522456
+clueweb09-en0004-68-17907 score: 0.0018613949744522456
+clueweb09-en0007-07-04652 score: 0.0017498425141736738
+clueweb09-en0007-07-04627 score: 0.0017498425141736738
+clueweb09-en0006-55-14956 score: 0.0010061594456498625
+clueweb09-en0009-91-12340 score: 0.0010061594456498625
+clueweb09-en0001-66-05968 score: 0.0010061594456498625
+clueweb09-en0010-02-39939 score: 0.0010061594456498625
+Content of clueweb09-en0005-08-38562:
+http ok content type text html accept ranges bytes server apache unix php mod ssl openssl f mod perl frontpage last modified sat jul gmt etag c d b e date thu jan gmt connection close content length connecticut colleges and universities connecticut colleges colleges universities connecticut financia
+Content of clueweb09-en0002-80-09432:
+null
+Content of clueweb09-en0004-68-17977:
+http ok content type text html content encoding gzip expires thu jan gmt p p policyref http p p yahoo com w c p p xml cp cao dsp cor cur adm dev tai psa psd ivai ivdi coni telo otpi our deli sami otri unri pubi ind phy onl uni pur fin com nav int dem cnt sta pol hea pre gov date thu jan gmt cache co
+Content of clueweb09-en0004-68-17907:
+http ok content type text html content encoding gzip expires thu jan gmt p p policyref http p p yahoo com w c p p xml cp cao dsp cor cur adm dev tai psa psd ivai ivdi coni telo otpi our deli sami otri unri pubi ind phy onl uni pur fin com nav int dem cnt sta pol hea pre gov date thu jan gmt cache co
+Content of clueweb09-en0007-07-04652:
+null
+Content of clueweb09-en0007-07-04627:
+null
+Content of clueweb09-en0006-55-14956:
+http ok content type text html charset utf server microsoft iis expires date fri jan gmt x aspnet version cache control no cache pragma no cache connection close set cookie flowgo sd ms xni ymda idk mtk ntygqu domain flowgo com expires fri jan gmt path content length toilet humor flowgo flowgo popul
+Content of clueweb09-en0009-91-12340:
+http ok content type text html x powered by php server apache unix php mod auth passthrough mod log bytes mod bwlimited frontpage dav mod ssl openssl b expires thu nov gmt date thu jan gmt pragma no cache cache control no store no cache must revalidate post check pre check connection close set cooki
+Content of clueweb09-en0001-66-05968:
+null
+Content of clueweb09-en0010-02-39939:
+http ok content type text html set cookie jsessionid gwt ok wa gxqfibracaoq domain parents com path content encoding x gzip vary accept encoding p p cp cao dsp cor cura adma deva taia ivao ivdo cono our dela otro ind phy onl uni pur com nav int dem cnt sta pre date mon jan gmt connection close conte
+BUILD SUCCESSFUL (total time: 1 second)
+
+/////////////////////////////////
+Output para la colección de 10k:
+/////////////////////////////////
+
+Top Documents:
+clueweb09-en0007-03-25677 score: 2.578907498916482E-4
+clueweb09-en0001-56-17409 score: 1.8546079195317755E-4
+clueweb09-en0002-24-11943 score: 1.8546079195317755E-4
+clueweb09-en0007-29-27035 score: 1.8546079195317755E-4
+clueweb09-en0010-89-35292 score: 1.8546079195317755E-4
+clueweb09-en0003-51-24049 score: 1.8546079195317755E-4
+clueweb09-en0003-59-32645 score: 1.8546079195317755E-4
+clueweb09-en0011-31-12822 score: 1.8546079195317755E-4
+clueweb09-en0010-99-13938 score: 1.8546079195317755E-4
+clueweb09-en0003-73-34750 score: 1.8546079195317755E-4
+Content of clueweb09-en0007-03-25677:
+http ok content type text html accept ranges bytes server apache last modified tue oct gmt etag b c cf bea date sun jan gmt connection close content length hq travel online travel website directory search travel sites looking for a travel site in particular more search options hqtravel com all right
+Content of clueweb09-en0001-56-17409:
+http ok content type text html x powered by php server apache unix php mod ssl openssl e last modified sun jan gmt expires mon jul gmt date sun jan gmt pragma no cache cache control no store no cache must revalidate connection close set cookie phpsessid ae c a ae cfcafe b bc c f path content length 
+Content of clueweb09-en0002-24-11943:
+http ok content type text html vary server apache expires thu jan gmt p p cp idc dsp cor deva taia our bus uni date thu jan gmt cache control max age pragma no cache connection close set cookie zbt domain about com path content length linux user path i getting started on linux search linux home comp
+Content of clueweb09-en0007-29-27035:
+http ok accept ranges bytes content type text html server microsoft iis last modified mon jan gmt etag fc ec p p policyref http www storehost us w c p p xml cp non dsp cor law cur adm deli sami unri pubi otri stp date sun jan gmt content length organizers high performance office products our other s
+Content of clueweb09-en0010-89-35292:
+http ok content type text html server apache x powered by php date sun jan gmt connection close content length travel travel information the weather network already a member sign in email password ok forgot your password not a member register it s free home contact us help faq contests weathercentre
+Content of clueweb09-en0003-51-24049:
+http ok content type text html accept ranges bytes content encoding gzip vary accept encoding server apache unix mod ssl openssl b php date fri jan gmt x pad avoid browser bug connection close content length how to transcribe cemetery data how to get started for more hints a cemetery survey as an ea
+Content of clueweb09-en0003-59-32645:
+http ok content type text html accept ranges bytes server apache last modified wed jan gmt etag f a f date thu jan gmt connection close content length saving money in the kitchen kitchen organization kitchen tools and kitchen safety the pennypincher tightwad tidbits daily more than just money the ge
+Content of clueweb09-en0011-31-12822:
+http ok content type text html charset utf server apache red hat x powered by php date wed jan gmt connection close content length corvette parts and accessories for the c c and z corvette search corvette parts corvette parts catalog my account cart contents checkout corvette parts corvette floor ma
+Content of clueweb09-en0010-99-13938:
+http ok content type text html accept ranges bytes server apache fedora last modified mon jan gmt etag f b fc d e date thu jan gmt x pad avoid browser bug connection close content length plumbing supplies c from famous plumbingsupply com plumbing supplies starting with the letter c change font size 
+Content of clueweb09-en0003-73-34750:
+http ok content type text html charset utf content encoding gzip vary user agent x powered by php server apache last modified wed jan gmt expires sun nov gmt etag d dacbabf f a f fd ed a date fri jan gmt cache control must revalidate connection close set cookie sessfa ac ea a d b d e df e edc c d ex
+BUILD SUCCESSFUL (total time: 4 seconds)
+
+/////////////////////////////////
 Output para la colección de 100k:
+/////////////////////////////////
 
 Top Documents:
 clueweb09-en0003-78-25744 score: 1.2287932772168524E-4

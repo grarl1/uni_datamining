@@ -22,3 +22,5 @@ manifest.mf
 *.toc
 /bmi-p3-03/build/
 /bmi-p3-03/dist/
+/bmi-p4-03/build/
+/bmi-p4-03/dist/
