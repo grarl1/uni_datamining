@@ -1,0 +1,46 @@
+Page Rank Top:
+barabasi	5	0.010220768471803785
+barabasi	2	0.0063872738742215
+barabasi	3	0.005621383227219509
+barabasi	11	0.005223782045413063
+barabasi	28	0.004767904678796683
+barabasi	33	0.004620492749498983
+barabasi	1	0.004581379426797966
+barabasi	42	0.004230330433655925
+barabasi	16	0.003912021832203098
+barabasi	9	0.0037045783187331835
+
+Clustering Top:
+barabasi	1854	1.0
+barabasi	1080	1.0
+barabasi	1549	1.0
+barabasi	847	1.0
+barabasi	344	1.0
+barabasi	229	0.3333333333333333
+barabasi	235	0.3333333333333333
+barabasi	1518	0.3333333333333333
+barabasi	25	0.3333333333333333
+barabasi	718	0.3333333333333333
+
+Embeddedness Top:
+barabasi		1549	1337	0.5
+barabasi		430	847	0.3333333333333333
+barabasi		1854	27	0.2
+barabasi		1518	593	0.16666666666666666
+barabasi		679	535	0.14285714285714285
+barabasi		182	395	0.1
+barabasi		46	488	0.1
+barabasi		223	847	0.1
+barabasi		1549	34	0.09090909090909091
+barabasi		229	154	0.09090909090909091
+
+Number of Vertices in graph: 2000
+Number of Edges in graph: 3994
+Clustering average: 0.0040227658750260735
+Friendship paradox fulfill rate: 0.868
+Local bridges: 3882
+Grade Assortativity: -0.043094240990003904
+Writting Distribution file
+Writting Pagerank and Betweenness file
+Done.
+

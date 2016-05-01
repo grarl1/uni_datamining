@@ -1,0 +1,45 @@
+Page Rank Top:
+twitterDirected	StephenAtHome	0.011883813970530822
+twitterDirected	billclinton	0.01148402088224791
+twitterDirected	Pontifex	0.004529967314158372
+twitterDirected	Pontifex_es	0.004373738174913462
+twitterDirected	nytimes	0.0037040022463153176
+twitterDirected	BBCBreaking	0.003424593282338947
+twitterDirected	ConanOBrien	0.0032975348200435005
+twitterDirected	twitter	0.003063247379956932
+twitterDirected	BBCWorld	0.002942007182467973
+twitterDirected	BBCNews	0.0027879967282720326
+
+Clustering Top:
+twitterDirected	AytoCamarma	1.0
+twitterDirected	ModernFam	1.0
+twitterDirected	xatakaciencia	1.0
+twitterDirected	TESOnline	1.0
+twitterDirected	OSLUC3M	1.0
+twitterDirected	hostbot	1.0
+twitterDirected	OMGFactsSex	1.0
+twitterDirected	Mike_Matei	1.0
+twitterDirected	VansWarpedTour	1.0
+twitterDirected	HalfPics	1.0
+
+Embeddedness Top:
+twitterDirected		neilepstein	neilepstein	1.0
+twitterDirected		beaulebens	beaulebens	1.0
+twitterDirected		bandagranpoder	GjConcepcion	0.8666666666666667
+twitterDirected		GjConcepcion	bandagranpoder	0.8666666666666667
+twitterDirected		peytonstevens	silly_dwilli	0.8461538461538461
+twitterDirected		silly_dwilli	peytonstevens	0.8461538461538461
+twitterDirected		masonshreds	cristiaaandiaz	0.7647058823529411
+twitterDirected		cristiaaandiaz	masonshreds	0.7647058823529411
+twitterDirected		bandagranpoder	BandasDeGranada	0.75
+twitterDirected		BandasDeGranada	bandagranpoder	0.75
+
+Number of Vertices in graph: 10029
+Number of Edges in graph: 560227
+Clustering average: 0.1858706040507046
+Friendship paradox fulfill rate: 0.8962010170505534
+Local bridges: 7259
+Grade Assortativity: 1.1284211602022005
+Writting Distribution file
+Writting Pagerank and Betweenness file
+Done.

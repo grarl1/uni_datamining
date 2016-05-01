@@ -1,0 +1,46 @@
+Page Rank Top:
+facebook4k	483	0.0013595547762171862
+facebook4k	3830	0.0013415398626699878
+facebook4k	376	9.37837769640801E-4
+facebook4k	2313	9.291972592948352E-4
+facebook4k	2047	9.048968841764915E-4
+facebook4k	25	8.309741536471209E-4
+facebook4k	828	8.291791006689456E-4
+facebook4k	428	8.203066806088358E-4
+facebook4k	475	8.110588383957936E-4
+facebook4k	56	8.058321460118947E-4
+
+Clustering Top:
+facebook4k	2375	1.0
+facebook4k	3669	1.0
+facebook4k	3653	1.0
+facebook4k	0	1.0
+facebook4k	1016	1.0
+facebook4k	3676	1.0
+facebook4k	1027	1.0
+facebook4k	3691	1.0
+facebook4k	3686	1.0
+facebook4k	3689	1.0
+
+Embeddedness Top:
+facebook4k		2792	3037	1.0
+facebook4k		581	642	1.0
+facebook4k		3987	4012	1.0
+facebook4k		3846	3746	1.0
+facebook4k		4001	4029	1.0
+facebook4k		42	33	1.0
+facebook4k		244	282	1.0
+facebook4k		256	233	1.0
+facebook4k		3407	3268	1.0
+facebook4k		2691	3037	1.0
+
+Number of Vertices in graph: 3959
+Number of Edges in graph: 84243
+Clustering average: 0.592260317265154
+Friendship paradox fulfill rate: 0.7600404142460218
+Local bridges: 704
+Grade Assortativity: 0.6299345168308577
+Writting Distribution file
+Writting Pagerank and Betweenness file
+Done.
+

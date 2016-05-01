@@ -1,5 +1,7 @@
 \documentclass[spanish]{assignment}
 
+\usepackage{float}
+
 % Title page
 \title{Búsqueda y Minería de Información}
 \subtitle{Práctica 4 - Sistemas de Recomendación y Análisis de Redes Sociales}
@@ -81,6 +83,130 @@
 		Cuando están calculadas todas las similitudes se realiza lo mismo que el método anterior.
 	\end{itemize}
 	
+	\subsection{Evaluación de Recomendaciones.}
+	Para la implementación de los métodos, se ha utilizado una tabla hash bidimensional. Tras cargar los datos del fichero de ratings, se han eliminado al azar
+	un 20 \% de los ratings y se ha registrado en la tabla hash bidimensional, el usuario, la película correspondiente y el rating que se había asignado.
+	Posteriormente se ejecuta el algoritmo normalmente y se computa el rating asignado por el algoritmo y el asignado por el usuario para el cálculo de las métricas.
+	La clase que realiza este procedimiento se llama \textit{Metrics}.
+	
 	\section{Análisis de redes sociales}
+	
+	En la figura \ref{distribuciones} podemos ver las distribuciones de grado que siguen las diferentes redes sociales.
+	
+	\begin{figure}[ht!]
+		\begin{subfigure}[t!]{\textwidth}
+			\begin{subfigure}[t!]{\textwidth}
+				\centering
+				\includegraphics[width=180pt, height=120pt]{img/barabasi_dl.png}
+			\end{subfigure}\\
+			\begin{subfigure}[t!]{\textwidth}
+				\centering
+				\includegraphics[width=180pt, height=120pt]{img/erdos_d.png}
+			\end{subfigure}
+		\end{subfigure}
+		\begin{subfigure}[t!]{\textwidth}
+			\begin{subfigure}[t!]{\textwidth}
+				\centering
+				\includegraphics[width=180pt, height=120pt]{img/facebook_dl.png}
+			\end{subfigure}
+			\begin{subfigure}[t!]{\textwidth}
+				\centering
+				\includegraphics[width=180pt, height=120pt]{img/twitter_d.png}
+			\end{subfigure}
+		\end{subfigure}
+		\caption{%
+			Distribuciones de grado.
+		}%
+		\label{distribuciones}
+	\end{figure}
+	
+	Como se puede comprobar, el grafo Barabasi sigue una distribución powerlaw y el grafo Erdos una normal de media 200 
+	(se han usado 1000 nodos y una probabilidad de enlace de 0.2). La distribución de Facebook también se corresponde con 
+	los modelos vistos en teoría y es bastante similar a la de twitter, para la que se ha considerado un grafo no dirigido.\\
+	
+	En las gráficas de la figura \ref{scatters} podemos ver los scatterplots de pagerank y betweenness.\\
+	
+		\begin{figure}[ht!]
+			\begin{subfigure}[t!]{0.5\textwidth}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/barabasi_pr_s.png}
+				\end{subfigure}\\
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/erdos_pr_s.png}
+				\end{subfigure}
+			\end{subfigure}
+			\begin{subfigure}[t!]{0.5\textwidth}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/barabasi_b_s.png}
+				\end{subfigure}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/erdos_b_s.png}
+				\end{subfigure}
+			\end{subfigure}
+			\begin{subfigure}[t!]{0.5\textwidth}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/facebook_pr_s.png}
+				\end{subfigure}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/twitter_pr_s.png}
+				\end{subfigure}
+			\end{subfigure}
+			\begin{subfigure}[t!]{0.5\textwidth}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/facebook_b_s.png}
+				\end{subfigure}
+				\begin{subfigure}[t!]{\textwidth}
+					\centering
+					\includegraphics[width=180pt, height=120pt]{img/twitter_b_s.png}
+				\end{subfigure}
+			\end{subfigure}
+			\caption{%
+				Scatterplots
+			}%
+			\label{scatters}
+		\end{figure}
+	
+	En la siguiente tabla podemos ver el número de puentes locales encontrados en las redes, así como el ratio respecto a número total de enlaces:
+
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			&\textbf{Puentes Locales} & \textbf{Puentes totales} & \textbf{Ratio} \\ 
+			\hline
+			Barabasi & 3882 & 3994 & 97.19\% \\
+			\hline
+			Erdos & 0 & 99696 & 0\% \\
+			\hline
+			Facebook & 704 & 84232 & 0.8\% \\
+			\hline
+			Twitter & 6884 & 560227 & 1.2\% \\
+			\hline
+		\end{tabular}
+	\end{center}	
+	
+	El grafo Barabasi ha sido generado con 2 enlaces por nodo, por lo tanto es muy poco probable que dos nodos tengan un amigo en común, por eso es tan alto
+	el número de puentes locales.
+	Esto no es así en facebook ni twitter, y menos aún en el grafo Erdos, en el que cada nodo tiene una media de 200 conexiones, de forma que es altamente probable
+	(en esta ejecución en concreto, tiene probabilidad 1) que alguno de nuestros 200 contactos (que a su vez tienen una media de 200 contactos) esté conectado con alguno de los 800 individuos con los que no estamos conectados directamente.\\
+	
+	A continuación se muestra una tabla con el porcentaje de nodos en cada red social que cumplen la paradoja de la amistad.
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|}
+			\hline
+			\textbf{Barabasi} & \textbf{Erdos} & \textbf{facebook4k} & \textbf{twitter10k} \\ 
+			\hline
+			86.8 \% & 53.4\% & 76\% & 89.62\% \\
+			\hline
+		\end{tabular}
+	\end{center}
+	En diversas ejecuciones de Erdos, se ha encontrado un porcentaje por debajo del 50\%, por lo que podemos concluir que generalmente no se cumple la paradoja.
+	En el resto de redes sí se cumple la paradoja.
 	
 \end{document}

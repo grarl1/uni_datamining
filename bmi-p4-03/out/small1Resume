@@ -1,0 +1,46 @@
+Page Rank Top:
+small1	6	0.10840208965882778
+small1	4	0.0893192879524817
+small1	8	0.08425255458918945
+small1	5	0.08228266384286916
+small1	10	0.07906456020304195
+small1	11	0.07802237657375265
+small1	13	0.07802237657375265
+small1	12	0.07779228366225802
+small1	1	0.07779228366225802
+small1	3	0.06407929650705163
+
+Clustering Top:
+small1	9	1.0
+small1	2	1.0
+small1	7	1.0
+small1	3	1.0
+small1	8	0.6666666666666666
+small1	12	0.6666666666666666
+small1	1	0.6666666666666666
+small1	4	0.3333333333333333
+small1	13	0.3333333333333333
+small1	6	0.3333333333333333
+
+Embeddedness Top:
+small1		2	3	1.0
+small1		1	12	1.0
+small1		6	8	0.6666666666666666
+small1		8	9	0.5
+small1		7	8	0.5
+small1		2	4	0.5
+small1		4	3	0.5
+small1		13	12	0.3333333333333333
+small1		13	1	0.3333333333333333
+small1		9	6	0.3333333333333333
+
+Number of Vertices in graph: 13
+Number of Edges in graph: 18
+Clustering average: 0.4411764705882353
+Friendship paradox fulfill rate: 0.38461538461538464
+Local bridges: 5
+Grade Assortativity: -0.21153846153846154
+Writting Distribution file
+Writting Pagerank and Betweenness file
+Done.
+

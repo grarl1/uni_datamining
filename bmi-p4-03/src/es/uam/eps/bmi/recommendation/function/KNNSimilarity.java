@@ -118,7 +118,7 @@ public class KNNSimilarity {
     }
 
     /**
-     * Builds the rating table of an user.
+     * Builds the rating table of a user.
      *
      * @param mode 0 to use the user similarity table, 1 to use the complete
      * similarity table.
@@ -162,8 +162,13 @@ public class KNNSimilarity {
             double norm = 0;
             for (Neighbor n : minHeap.asList()) {
                 double itemRating = ratingData.getData().get(n.getNeighborID(), itemCoord);
-                product += itemRating * n.getNeighborSim();
-                norm += n.getNeighborSim();
+                if (itemRating != 0){
+                    product += itemRating * n.getNeighborSim();
+                    norm += n.getNeighborSim();
+                }
+            }
+            if (norm == 0) {
+                norm = 1.0;
             }
             this.ratingTable.put(ratingData.getColumnIDs()[itemCoord], product / norm);
         });

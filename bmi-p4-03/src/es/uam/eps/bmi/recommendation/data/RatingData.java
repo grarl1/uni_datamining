@@ -26,7 +26,7 @@ import java.util.HashMap;
  * @author Guillermo Ruiz Álvarez
  * @author Enrique Cabrerizo Fernández
  */
-public abstract class RatingData {
+public abstract class RatingData implements Cloneable {
 
     /**
      * Load the data from file.
@@ -70,4 +70,12 @@ public abstract class RatingData {
      * @return the matrix of data.
      */
     public abstract SparseDoubleMatrix2D getData();
+    
+    /**
+     * Clones this object.
+     *
+     * @return a clone of the object.
+     */
+    @Override
+    public abstract RatingData clone();
 }

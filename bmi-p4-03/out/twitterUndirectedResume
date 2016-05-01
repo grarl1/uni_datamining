@@ -1,0 +1,45 @@
+Page Rank Top:
+twitterUndirected	el_pais	0.001673504498540136
+twitterUndirected	BillGates	0.0014321580469110616
+twitterUndirected	Buenafuente	0.0013989387850895099
+twitterUndirected	jordievole	0.0013843525208352041
+twitterUndirected	_anapastor_	0.0013116305879614981
+twitterUndirected	TechCrunch	0.001255183222682657
+twitterUndirected	nytimes	0.0011919799981290227
+twitterUndirected	elmundoes	0.0011172598882281208
+twitterUndirected	perezreverte	0.0010911932532977275
+twitterUndirected	instagram	0.0010454493878978707
+
+Clustering Top:
+twitterUndirected	teresagilc	1.0
+twitterUndirected	SmogonU	1.0
+twitterUndirected	hostbot	1.0
+twitterUndirected	envasados	1.0
+twitterUndirected	primary0	1.0
+twitterUndirected	ConMdeManticora	1.0
+twitterUndirected	discusster	1.0
+twitterUndirected	alexkieft	1.0
+twitterUndirected	ourtinyservant	1.0
+twitterUndirected	LifeAsParty	1.0
+
+Embeddedness Top:
+twitterUndirected		neilepstein	neilepstein	1.0
+twitterUndirected		beaulebens	beaulebens	1.0
+twitterUndirected		bandagranpoder	GjConcepcion	0.8666666666666667
+twitterUndirected		silly_dwilli	peytonstevens	0.8461538461538461
+twitterUndirected		masonshreds	cristiaaandiaz	0.7647058823529411
+twitterUndirected		llamadorgranada	bandagranpoder	0.75
+twitterUndirected		_NFC_	BUYNFCTAGS	0.75
+twitterUndirected		bandagranpoder	BandasDeGranada	0.75
+twitterUndirected		swarthmore	SwatAlum	0.7297297297297297
+twitterUndirected		bandagranpoder	TresCaidasGr	0.7058823529411765
+
+Number of Vertices in graph: 10029
+Number of Edges in graph: 560227
+Clustering average: 0.15427742853692425
+Friendship paradox fulfill rate: 0.8962010170505534
+Local bridges: 6844
+Grade Assortativity: -0.0771935066384538
+Writting Distribution file
+Writting Pagerank and Betweenness file
+Done.

@@ -38,10 +38,34 @@ public class MovieRatingData extends RatingData {
     /* Data */
     private Integer[] userID;
     private Integer[] movieID;
-    private final HashMap<Integer, Integer> userMap = new HashMap<>();
-    private final HashMap<Integer, Integer> movieMap = new HashMap<>();
+    private HashMap<Integer, Integer> userMap = new HashMap<>();
+    private HashMap<Integer, Integer> movieMap = new HashMap<>();
     private SparseDoubleMatrix2D ratingData;
-
+    
+    /**
+     * Default constructor.
+     */
+    public MovieRatingData() {
+    }
+    
+    /**
+     * Constructor for clonning purposes.
+     * @param userID
+     * @param movieID
+     * @param userMap
+     * @param movieMap
+     * @param ratingData 
+     */
+    public MovieRatingData(Integer[] userID, Integer[] movieID, 
+            HashMap<Integer, Integer> userMap, HashMap<Integer, Integer> movieMap,
+            SparseDoubleMatrix2D ratingData) {
+        this.userID = userID;
+        this.movieID = movieID;
+        this.userMap = userMap;
+        this.movieMap = movieMap;
+        this.ratingData = ratingData;
+    }
+    
     /**
      * Load the data from file.
      *
@@ -156,5 +180,18 @@ public class MovieRatingData extends RatingData {
     @Override
     public SparseDoubleMatrix2D getData() {
         return ratingData;
+    }
+
+    /**
+     * Returns a clone of this object.
+     *
+     * @return the matrix of data.
+     */
+    @Override
+    public MovieRatingData clone() {
+        return new MovieRatingData(this.userID.clone(), this.movieID.clone(), 
+                (HashMap<Integer,Integer>) this.userMap.clone(), 
+                 (HashMap<Integer,Integer>) this.movieMap.clone(),
+                (SparseDoubleMatrix2D) this.ratingData.clone());
     }
 }

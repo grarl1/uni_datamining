@@ -1,0 +1,75 @@
+barabasi	1854	1.0
+barabasi	1080	1.0
+barabasi	1549	1.0
+barabasi	847	1.0
+barabasi	344	1.0
+barabasi	229	0.3333333333333333
+barabasi	235	0.3333333333333333
+barabasi	1518	0.3333333333333333
+barabasi	25	0.3333333333333333
+barabasi	718	0.3333333333333333
+
+erdos	384	0.20834540712836858
+erdos	383	0.20824282929546087
+erdos	551	0.20786069651741293
+erdos	479	0.20778843359488522
+erdos	836	0.20744805590732143
+erdos	754	0.2072072072072072
+erdos	980	0.2067999613638559
+erdos	270	0.2064676616915423
+erdos	566	0.20646661031276417
+erdos	691	0.20622977661689604
+
+facebook4k	2375	1.0
+facebook4k	3669	1.0
+facebook4k	3653	1.0
+facebook4k	0	1.0
+facebook4k	1016	1.0
+facebook4k	3676	1.0
+facebook4k	1027	1.0
+facebook4k	3691	1.0
+facebook4k	3686	1.0
+facebook4k	3689	1.0
+
+small1	9	1.0
+small1	2	1.0
+small1	7	1.0
+small1	3	1.0
+small1	8	0.6666666666666666
+small1	12	0.6666666666666666
+small1	1	0.6666666666666666
+small1	4	0.3333333333333333
+small1	13	0.3333333333333333
+small1	6	0.3333333333333333
+
+small2	9	0.6666666666666666
+small2	8	0.6666666666666666
+small2	7	0.6666666666666666
+small2	6	0.6666666666666666
+small2	5	0.6666666666666666
+small2	4	0.6666666666666666
+small2	1	0.6666666666666666
+small2	2	0.6666666666666666
+small2	3	0.2857142857142857
+
+twitterDirected	AytoCamarma	1.0
+twitterDirected	ModernFam	1.0
+twitterDirected	xatakaciencia	1.0
+twitterDirected	TESOnline	1.0
+twitterDirected	OSLUC3M	1.0
+twitterDirected	hostbot	1.0
+twitterDirected	OMGFactsSex	1.0
+twitterDirected	Mike_Matei	1.0
+twitterDirected	VansWarpedTour	1.0
+twitterDirected	HalfPics	1.0
+
+twitterUndirected	teresagilc	1.0
+twitterUndirected	SmogonU	1.0
+twitterUndirected	hostbot	1.0
+twitterUndirected	envasados	1.0
+twitterUndirected	primary0	1.0
+twitterUndirected	ConMdeManticora	1.0
+twitterUndirected	discusster	1.0
+twitterUndirected	alexkieft	1.0
+twitterUndirected	ourtinyservant	1.0
+twitterUndirected	LifeAsParty	1.0

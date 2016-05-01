@@ -128,10 +128,12 @@ public class GraphTest {
         String graphName = null;
         // Input control
         if (args.length < 3) {
-            System.err.printf("Usage: ./GraphData csvFile directed\n"
-                    + "\tcsvFile: File containing vertex and edges.\n"
+            System.err.printf("Usage: %s csvFile directed graphName\n"
+                    + "\tcsvFile: File containing vertices and edges.\n"
                     + "\tdirected: true if graph is directed, false otherwise.\n"
-                    + "\tgraphName: Name of the graph, to print before each line and to write output files.\n");
+                    + "\tgraphName: Name of the graph, to print before each line and to write output files.\n" 
+                    + "Output files generated in %s directory\n",
+                    GraphTest.class.getSimpleName(), OUTDIR);
             return;
         }
         String csvFile = args[0];

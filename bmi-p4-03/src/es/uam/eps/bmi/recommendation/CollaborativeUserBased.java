@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class representing a user-based collaborative recommender system for movies.
@@ -38,7 +39,7 @@ import java.util.List;
 public class CollaborativeUserBased {
 
     // Attributes.
-    private final RatingData ratingData;
+    private RatingData ratingData;
     private KNNSimilarity knnSim;
 
     // Profile
@@ -56,6 +57,13 @@ public class CollaborativeUserBased {
     }
 
     /**
+     * Getter for RatingData
+     */
+    public RatingData getRatingData() {
+        return ratingData;
+    }
+    
+    /**
      * Generates the user profile for a given user ID.
      *
      * @param userID The ID of the user whose profile is going to be generated.
@@ -66,6 +74,24 @@ public class CollaborativeUserBased {
         if (userIndex == null) {
             return;
         }
+        // Get rated movies
+        IntArrayList coord = new IntArrayList();
+        DoubleArrayList values = new DoubleArrayList();
+        this.ratingData.getData().viewRow(userIndex).getNonZeros(coord, values);
+
+        // Store the profile
+        this.userCoords = coord.toList();
+        this.userRatingValues = values.toList();
+    }
+    
+    /**
+     * Generates the user profile for a given user index.
+     *
+     * @param userIndex Index of the user in the matrix.
+     */
+    public void generateProfileFromUserIndex(int userIndex) {
+        // Get the user index
+        this.userIndex = userIndex;
         // Get rated movies
         IntArrayList coord = new IntArrayList();
         DoubleArrayList values = new DoubleArrayList();
@@ -147,6 +173,15 @@ public class CollaborativeUserBased {
         List<RankedMovie> retList = minHeap.asList();
         Collections.sort(retList, Collections.reverseOrder());
         return retList;
+    }
+    
+    /**
+     * Returns every recommendation generated for a user.
+     *
+     * @return the generated recommendations.
+     */
+    public HashMap<Integer,Double> getReccomendation(){
+        return this.knnSim.getRatingData();
     }
 
     /**

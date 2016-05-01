@@ -475,8 +475,15 @@ public class SocialGraph {
         int paradox_fulfilled = 0;
         //compute the number of friends for each 
         HashMap<String, Integer> friendMap = new HashMap();
-        for (String s : g.getVertices()) {
-            friendMap.put(s, g.getNeighborCount(s));
+        if (!isDirected) {
+            for (String s : g.getVertices()) {
+                friendMap.put(s, g.getNeighborCount(s));
+            }
+        }
+        else {
+            for (String s : g.getVertices()) {
+                friendMap.put(s, g.getPredecessorCount(s));
+            }
         }
         for (String me : g.getVertices()) {
             int nFriendFriends = 0;
