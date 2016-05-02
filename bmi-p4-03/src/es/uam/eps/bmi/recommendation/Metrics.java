@@ -69,8 +69,6 @@ public class Metrics {
             System.err.println(ex.getMessage());
             return;
         }
-for (neighbors=10; neighbors<75; neighbors+=5){
-System.out.println("Neighbors: " + neighbors);
         MovieRatingData ratingCopy = ratingData.clone();
         removeTestEntrances(ratingCopy, trainPercentage);
         CollaborativeUserBased cub = new CollaborativeUserBased(ratingCopy);
@@ -79,7 +77,6 @@ System.out.println("Neighbors: " + neighbors);
         computeDifferences();
         System.out.println("MAE Score: " + maeScore());
         System.out.println("RMSE Score: " + rmseScore());
-}
     }
 
     /**

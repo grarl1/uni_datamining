@@ -89,6 +89,17 @@
 	Posteriormente se ejecuta el algoritmo normalmente y se computa el rating asignado por el algoritmo y el asignado por el usuario para el cálculo de las métricas.
 	La clase que realiza este procedimiento se llama \textit{Metrics}.
 	
+	Se han computado las métricas MAE y RMSE para un número de vecinos de 10 a 70 con incrementos de 5 en 5, obteniendo la gráfica mostrada en la figura \ref{mae_rmse}.
+	
+	\begin{figure}
+		\centering
+		\includegraphics[width=200pt, height=140pt]{img/mae_rmse.png}
+		\caption{Métricas MAE \& RMSE.}
+		\label{mae_rmse}
+	\end{figure}
+	
+	Como se puede comprobar, el comportamiento de ambas es el mismo (de hecho su computación solo varía en el valor de una constante) y en general mejoran según aumenta el número de vecinos que usamos para realizar la recomendación.
+	
 	\section{Análisis de redes sociales}
 	
 	En la figura \ref{distribuciones} podemos ver las distribuciones de grado que siguen las diferentes redes sociales.
