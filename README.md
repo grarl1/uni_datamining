@@ -1,3 +1,5 @@
 # DataMining
-Assignments of data mining.
+
+Data mining assignments.
+
 Reports written in Spanish.
